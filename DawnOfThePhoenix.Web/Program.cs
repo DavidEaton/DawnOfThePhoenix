@@ -1,5 +1,6 @@
 using DawnOfThePhoenix.Web.Options;
 using DawnOfThePhoenix.Web.Services;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
@@ -13,7 +14,19 @@ builder.Services.AddHttpClient<StripeCheckoutService>(client =>
     client.Timeout = TimeSpan.FromSeconds(15);
 });
 
+// Only enable App Service proxy trust when the platform identifies this process.
+var isAppService = !string.IsNullOrWhiteSpace(builder.Configuration["WEBSITE_INSTANCE_ID"]);
+if (isAppService)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(AzureAppServiceProxy.Configure);
+}
+
 var app = builder.Build();
+if (isAppService)
+{
+    // Must run before HTTPS redirection, HSTS, and antiforgery cookie generation.
+    app.UseForwardedHeaders();
+}
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");

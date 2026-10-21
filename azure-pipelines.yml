@@ -1,0 +1,101 @@
+# GitHub remains the source repository. PRs validate; successful main builds deploy.
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  buildConfiguration: Release
+  azureServiceConnection: sc-phoenixrising-prod
+  # Set these two non-secret variables in the Azure DevOps pipeline UI:
+  # webAppName: the App Service resource name
+  # webAppHostName: the exact default hostname from its Overview page (no https://)
+
+stages:
+  - stage: Build
+    displayName: Build and verify
+    jobs:
+      - job: BuildAndCheck
+        steps:
+          - checkout: self
+
+          - task: UseDotNet@2
+            displayName: Install .NET 10 SDK
+            inputs:
+              packageType: sdk
+              version: 10.0.x
+
+          - script: dotnet restore DawnOfThePhoenix.slnx
+            displayName: Restore
+
+          - script: dotnet build DawnOfThePhoenix.slnx --configuration $(buildConfiguration) --no-restore
+            displayName: Build solution
+
+          # These are executable C# checks, not a test-runner project.
+          - script: dotnet run --project tests/DawnOfThePhoenix.Checks --configuration $(buildConfiguration) --no-build --no-restore
+            displayName: Run checkout and hosting checks
+
+          - script: dotnet publish DawnOfThePhoenix.Web --configuration $(buildConfiguration) --no-build --no-restore --output "$(Build.ArtifactStagingDirectory)/publish"
+            displayName: Publish web application
+
+          - task: ArchiveFiles@2
+            displayName: Package published application
+            inputs:
+              rootFolderOrFile: $(Build.ArtifactStagingDirectory)/publish
+              includeRootFolder: false
+              archiveType: zip
+              archiveFile: $(Build.ArtifactStagingDirectory)/website.zip
+              replaceExistingArchive: true
+
+          - task: PublishPipelineArtifact@1
+            displayName: Save deployable artifact
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)/website.zip
+              artifact: webapp
+
+  - stage: Deploy
+    displayName: Deploy production
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))
+    jobs:
+      - deployment: DeployWebApp
+        displayName: Deploy to Azure App Service
+        environment: phoenixrising-production
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: none
+
+                - download: current
+                  artifact: webapp
+
+                - task: AzureWebApp@1
+                  displayName: Deploy published ZIP
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    appType: webAppLinux
+                    appName: $(webAppName)
+                    package: $(Pipeline.Workspace)/webapp/website.zip
+                    runtimeStack: DOTNETCORE|10.0
+                    startUpCommand: dotnet DawnOfThePhoenix.Web.dll
+
+                - bash: |
+                    set -euo pipefail
+                    curl --fail --silent --show-error --location \
+                      --retry 12 --retry-delay 5 --retry-all-errors \
+                      --connect-timeout 10 --max-time 30 \
+                      "https://${WEB_APP_HOST_NAME}/" \
+                      --output /tmp/phoenixrising-home.html
+                    grep -q 'PhoenixRising' /tmp/phoenixrising-home.html
+                  displayName: Verify website responds
+                  env:
+                    WEB_APP_HOST_NAME: $(webAppHostName)
