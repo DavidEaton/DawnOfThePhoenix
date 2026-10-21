@@ -1,6 +1,6 @@
 # PhoenixRising — ASP.NET Core Razor Pages
 
-Dawn's psychic medium business website, built in the existing **ASP.NET Core 10 Razor Pages** application. The design, artwork, prices, Cal.com booking dialog, Stripe checkout, and tip jar are preserved. Node.js, npm, Wrangler, and a JavaScript build step are not required. The small browser script uses plain JavaScript.
+Dawn's psychic medium business website, built in the existing **ASP.NET Core 10 Razor Pages** application. The design, artwork, prices, Cal.com booking dialog, Stripe checkout, and tip jar are preserved. Node.js, npm, Wrangler, and a JavaScript build step are not required. The browser code uses native JavaScript modules with no bundler or package installation.
 
 ## Run locally
 
@@ -79,13 +79,31 @@ Test both live session event types, their calendar entries and confirmation emai
 
 ## Project structure
 
-- `Pages/Index.cshtml`: the home page and service sections.
-- `Pages/Shared/_Layout.cshtml`: shared branding, navigation, metadata, footer, and antiforgery token.
-- `Pages/Terms.cshtml`, `Pages/Privacy.cshtml`: reading terms and privacy.
-- `Pages/Configuration.cshtml.cs`: safe public Cal.com/payment readiness settings at `/config.js`.
-- `Pages/Api/`: Razor Page handlers for checkout and payment status.
-- `Services/StripeCheckoutService.cs`: server-side Stripe integration.
-- `wwwroot/`: plain CSS/JavaScript and optimized supplied images.
+All paths below are relative to `DawnOfThePhoenix.Web/`.
+
+| What you want to edit | Where to look |
+| --- | --- |
+| Home-page section order | `Pages/Index.cshtml` |
+| Hero, readings, Dawn’s introduction, gifts, FAQs, and other section content | Named partials in `Pages/Home/` |
+| Header, footer, and dialog shell | `Pages/Shared/_Header.cshtml`, `_Footer.cshtml`, `_Dialog.cshtml` |
+| Shared metadata, CSS/script loading, and antiforgery token | `Pages/Shared/_Layout.cshtml` |
+| Reading terms and privacy page | `Pages/Terms.cshtml`, `Pages/Privacy.cshtml` |
+| Colors, typography, section styling, responsive rules | `wwwroot/css/site.css` (grouped with section comments) |
+| Browser startup | `wwwroot/js/site.js` |
+| Cal.com booking and email booking fallback | `wwwroot/js/booking.js` |
+| Written-reading UI and email questions | `wwwroot/js/readings.js` |
+| Tip UI and email fallback | `wwwroot/js/tips.js` |
+| Payment API calls, redirects, and return-page verification | `wwwroot/js/checkout.js` |
+| Public browser configuration and URL/email helpers | `wwwroot/js/configuration.js` |
+| Shared dialog, navigation, and privacy popup | `wwwroot/js/dialog.js`, `wwwroot/js/layout.js` |
+| Server-side configuration options | `Options/BusinessOptions.cs` and the settings described above |
+| Secret-free `/config.js` response | `Pages/Configuration.cshtml.cs` |
+| Checkout request validation and payment status handlers | `Pages/Api/` |
+| Server-side Stripe HTTP requests | `Services/StripeCheckoutService.cs` |
+
+`site.js` imports the feature modules directly in the browser. The server-provided `/config.js` is loaded first and contains only public booking paths, email, and payment readiness. Stripe keys remain server-side. Razor partials contain section markup; they do not make booking or payment requests.
+
+For a content change, edit the relevant partial. For a styling change, edit the matching section in `site.css`. For booking behavior, start in `booking.js`; for payment transport, start in `checkout.js`. The repository’s `.editorconfig` sets four-space indentation and consistent line endings. Formatting and organization do not introduce a Node.js build step.
 
 The superseded Node/Worker application has been removed. Supplied files were reference material; the user's current copy and prices govern the site. No invented testimonials or follower counts are included.
 
