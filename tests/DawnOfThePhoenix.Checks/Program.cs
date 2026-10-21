@@ -5,7 +5,10 @@ using DawnOfThePhoenix.Web.Options;
 using DawnOfThePhoenix.Web.Pages;
 using DawnOfThePhoenix.Web.Pages.Api;
 using DawnOfThePhoenix.Web.Services;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Options;
@@ -68,7 +71,26 @@ var config = configPage.OnGet().Content!;
 Check(config.Contains("https://cal.com/dawn/30-minute-reading") && !config.Contains("test-fixture-only"), "Public configuration must expose booking paths and omit secrets.");
 var badConfig = new ConfigurationModel(Options.Create(new CalComOptions { Username = "../bad" }), Options.Create(new StripeOptions()), site).OnGet().Content!;
 Check(!badConfig.Contains("../bad"), "Cal.com identifiers must be validated.");
-Console.WriteLine("PASS: C# checkout validation, fixed pricing, question fields, tips, error redaction, Stripe verification, safe redirects, and private configuration.");
+// Exercise the real middleware: Azure's trusted private proxy can identify
+// an HTTPS visitor; a public client cannot spoof the request scheme.
+var forwardingOptions = new ForwardedHeadersOptions();
+AzureAppServiceProxy.Configure(forwardingOptions);
+foreach (var address in new[] { "10.20.30.40", "::ffff:10.20.30.40", "203.0.113.12" })
+{
+    var context = new DefaultHttpContext();
+    context.Connection.RemoteIpAddress = IPAddress.Parse(address);
+    context.Request.Scheme = "http";
+    context.Request.Headers["X-Forwarded-Proto"] = "https";
+    context.Request.Headers["X-Forwarded-For"] = "198.51.100.20";
+    var middleware = new ForwardedHeadersMiddleware(
+        _ => Task.CompletedTask,
+        NullLoggerFactory.Instance,
+        Options.Create(forwardingOptions));
+    await middleware.Invoke(context);
+    var expectedScheme = address == "203.0.113.12" ? "http" : "https";
+    Check(context.Request.Scheme == expectedScheme, "Only a trusted App Service proxy may forward the HTTPS scheme.");
+}
+Console.WriteLine("PASS: C# checkout validation, fixed pricing, question fields, tips, error redaction, Stripe verification, safe redirects, private configuration, and Azure proxy trust.");
 
 sealed class FakeStripeHandler : HttpMessageHandler
 {
