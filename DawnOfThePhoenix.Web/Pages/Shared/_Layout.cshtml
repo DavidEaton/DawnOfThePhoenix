@@ -1,52 +1,28 @@
-﻿<!DOCTYPE html>
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery Antiforgery
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - DawnOfThePhoenix.Web</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#17171c" />
+    <meta name="request-verification-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+    <title>@ViewData["Title"] | PhoenixRising</title>
+    <meta name="description" content="Find a moment of clarity with Dawn at PhoenixRising. Psychic, medium, oracle and claircognizant readings. Live sessions from $30, or three yes/no questions for $8." />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/DawnOfThePhoenix.Web.styles.css" asp-append-version="true" />
+    <link rel="icon" href="~/assets/favicon.svg" type="image/svg+xml" />
+    <script src="~/config.js" defer></script>
+    <script src="~/js/site.js" asp-append-version="true" defer></script>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">DawnOfThePhoenix.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+<a class="skip" href="#main">Skip to content</a>
+<header><a href="/" class="brand" aria-label="PhoenixRising home"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 39c-3-10-18-9-18-27 6 9 12 6 18 17C30 18 36 21 42 12c0 18-15 17-18 27Zm0-10c-5-7-4-13 0-19 4 6 5 12 0 19Zm-9 3 9 11 9-11"/></svg><span>PhoenixRising<small>INTUITIVE READINGS WITH DAWN</small></span></a><nav aria-label="Main navigation"><a href="/#readings">Readings</a><a href="/#dawn">Meet Dawn</a><a href="/#gifts">Your gifts</a><a href="/#questions">FAQs</a></nav><button class="button small" data-book="choose">Schedule a session <span>↗</span></button><button class="menu" aria-expanded="false" aria-label="Toggle navigation">☰</button></header>
+<main id="main">
+    @RenderBody()
+</main>
+<footer><div class="footer-top"><a class="brand" href="/">PhoenixRising<small>CONNECTION. COMPASSION. CLARITY.</small></a><a href="mailto:dawn@dawnofthephoenix.com">Say hello to Dawn ↗</a><a href="/#readings">Explore readings ↑</a></div><p>For entertainment purposes only. Readings are not a substitute for medical, psychological, legal, or financial advice. No specific outcome or connection is guaranteed.</p><div class="footer-bottom"><span>© <span id="year">2026</span> PhoenixRising. All rights reserved.</span><button id="privacy">Privacy</button><a asp-page="/Terms">Reading terms</a><span>Made with intention. ✧</span></div></footer>
+<dialog id="modal"><button class="close" aria-label="Close dialog">×</button><div id="modal-content"></div></dialog>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - DawnOfThePhoenix.Web - <a asp-area="" asp-page="/Privacy">Privacy</a>
-        </div>
-    </footer>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-
-    @await RenderSectionAsync("Scripts", required: false)
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -1,3 +1,6 @@
 <Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/DawnOfThePhoenix.Checks/DawnOfThePhoenix.Checks.csproj" />
+  </Folder>
   <Project Path="DawnOfThePhoenix.Web/DawnOfThePhoenix.Web.csproj" />
 </Solution>
