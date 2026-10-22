@@ -14,7 +14,7 @@ export function initializeReadings() {
 
 function showReadingCheckout() {
     showDialog(`
-        <p class="eyebrow">THREE QUESTIONS · $8</p>
+        <p class="eyebrow">THREE QUESTIONS · $30</p>
         <h2>A little clarity awaits.</h2>
         <p>
             On the secure Stripe checkout page, enter your three yes-or-no questions
@@ -25,7 +25,7 @@ function showReadingCheckout() {
             Readings are for entertainment purposes only.
         </p>
         <button class="button" id="pay-questions">
-            Continue to secure checkout · $8 <span>↗</span>
+            Continue to secure checkout · $30 <span>↗</span>
         </button>
         <p role="status" id="checkout-error"></p>
     `);
@@ -48,7 +48,7 @@ function showEmailQuestions() {
         .join('');
 
     showDialog(`
-        <p class="eyebrow">THREE QUESTIONS · $8</p>
+        <p class="eyebrow">THREE QUESTIONS · $30</p>
         <h2>What’s on your heart?</h2>
         <p>
             Write three questions that can each be answered yes or no. Dawn answers within 48 hours.
@@ -77,12 +77,12 @@ function prepareQuestionsEmail(event) {
     const body =
         'Hi Dawn,\n\nMy name is ' +
         data.get('name') +
-        '. I would like the three yes/no question reading for $8.\n\n' +
+        '. I would like the three yes/no question reading for $30.\n\n' +
         questions.join('\n\n') +
         '\n\nPlease let me know how to pay and confirm when my reading will be ready.' +
         '\n\nI understand this is for entertainment purposes only.';
 
-    window.location.href = emailLink('PhoenixRising: Three yes/no questions ($8)', body);
+    window.location.href = emailLink('PhoenixRising: Three yes/no questions ($30)', body);
     document.querySelector('#email-help').textContent =
         'Email draft prepared. Please send it from your email app. If no app opened, email your questions to ' +
         configuration.email +

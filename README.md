@@ -47,7 +47,7 @@ dotnet user-secrets set "Stripe:SecretKey" "YOUR_STRIPE_TEST_SECRET_KEY" --proje
 
 Do not commit real keys to `appsettings.json`, a `.dev.vars` file, Git, or chat. This app uses ASP.NET configuration, not `.dev.vars`.
 
-Checkout is implemented server-side in C# with `HttpClient`; the secret never appears in public configuration. Razor Pages validates an antiforgery cookie/token on checkout requests. The server fixes the written reading price at $8 and validates whole-dollar tips from $1 to $1,000. Return-page payment status is checked against Stripe.
+Checkout is implemented server-side in C# with `HttpClient`; the secret never appears in public configuration. Razor Pages validates an antiforgery cookie/token on checkout requests. The server fixes the written reading price at $30 and validates whole-dollar tips from $1 to $1,000. Return-page payment status is checked against Stripe.
 
 Written readings collect three required yes/no questions (150 characters each) and a reply email in Stripe Checkout. Dawn fulfills them manually by viewing the paid Checkout session/custom fields in Stripe, then replying within 48 hours of payment. This app does not automate the readings or order emails. Enable customer receipts and merchant payment notifications in Stripe. Set the public business terms URL in Stripe to your website's `/terms` page before using Checkout terms consent. Stripe's live payment activation is required before real purchases.
 
@@ -114,4 +114,4 @@ dotnet build DawnOfThePhoenix.slnx
 dotnet run --project tests/DawnOfThePhoenix.Checks
 ```
 
-The dependency-free C# checks mock Stripe's HTTP responses; they make no charges. They cover request/amount validation, the fixed $8 price, required question fields, tip bounds, error redaction, safe redirects, payment status, and secret-free public configuration. Local HTTP smoke checks also verified Razor rendering, assets, routes, and antiforgery rejection. Live Stripe/Cal.com transactions still require the accounts to be configured; visual browser QA remains unverified in this environment.
+The dependency-free C# checks mock Stripe's HTTP responses; they make no charges. They cover request/amount validation, the fixed $30 price, required question fields, tip bounds, error redaction, safe redirects, payment status, and secret-free public configuration. Local HTTP smoke checks also verified Razor rendering, assets, routes, and antiforgery rejection. Live Stripe/Cal.com transactions still require the accounts to be configured; visual browser QA remains unverified in this environment.
