@@ -55,6 +55,9 @@ Tips are optional; they do not purchase a reading or reserve a session. Live ses
 
 ## Publish to a .NET host
 
+For the complete Azure Portal and Azure DevOps walkthrough, see [Azure deployment and CI/CD](docs/azure-deployment.md). The repository includes `azure-pipelines.yml`; pull requests validate, while successful `main` builds deploy through a federated Azure service connection.
+
+
 ```sh
 dotnet publish DawnOfThePhoenix.Web -c Release -o publish
 ```
