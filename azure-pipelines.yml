@@ -1,0 +1,69 @@
+# Linux App Service; verify the resource name and service connection before running.
+parameters:
+    -   name: appType
+        displayName: App Service operating system
+        type: string
+        default: webAppLinux
+        values:
+            - webAppLinux
+            - webApp
+trigger:
+    branches:
+        include:
+            - main
+pr:
+    branches:
+        include:
+            - main
+pool:
+    vmImage: ubuntu-latest
+variables:
+    buildConfiguration: Release
+    azureServiceConnection: azure-dawnofthephoenix
+    webAppName: dawnofthephoenix
+stages:
+    -   stage: Build
+        jobs:
+            -   job: BuildAndCheck
+                steps:
+                    -   task: UseDotNet@2
+                        inputs:
+                            packageType: sdk
+                            version: 10.0.x
+                    -   script: dotnet restore DawnOfThePhoenix.slnx
+                        displayName: Restore
+                    -   script: dotnet build DawnOfThePhoenix.slnx -c $(buildConfiguration) --no-restore
+                        displayName: Build
+                    -   script: dotnet run --project tests/DawnOfThePhoenix.Checks -c $(buildConfiguration) --no-build
+                        displayName: Run application checks
+                    -   script: dotnet publish DawnOfThePhoenix.Web/DawnOfThePhoenix.Web.csproj -c $(buildConfiguration) --no-build --no-restore -o $(Build.ArtifactStagingDirectory)/publish
+                        displayName: Publish web application
+                    -   bash: bash tests/deployment/smoke-publish.sh "$(Build.ArtifactStagingDirectory)/publish"
+                        displayName: Smoke check published application
+                    -   task: ArchiveFiles@2
+                        inputs:
+                            rootFolderOrFile: $(Build.ArtifactStagingDirectory)/publish
+                            includeRootFolder: false
+                            archiveType: zip
+                            archiveFile: $(Build.ArtifactStagingDirectory)/webapp.zip
+                    -   publish: $(Build.ArtifactStagingDirectory)/webapp.zip
+                        artifact: webapp
+    -   stage: Deploy
+        dependsOn: Build
+        condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))
+        jobs:
+            -   deployment: DeployProduction
+                environment: dawnofthephoenix-production
+                strategy:
+                    runOnce:
+                        deploy:
+                            steps:
+                                -   download: current
+                                    artifact: webapp
+                                -   task: AzureWebApp@1
+                                    inputs:
+                                        azureSubscription: $(azureServiceConnection)
+                                        appType: ${{ parameters.appType }}
+                                        appName: $(webAppName)
+                                        package: $(Pipeline.Workspace)/webapp/webapp.zip
+                                        deploymentMethod: zipDeploy

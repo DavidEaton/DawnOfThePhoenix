@@ -53,6 +53,10 @@ Written readings collect three required yes/no questions (150 characters each) a
 
 Tips are optional; they do not purchase a reading or reserve a session. Live session purchases use Cal.com's Stripe integration rather than the written-reading checkout endpoint.
 
+## Azure deployment
+
+See [the Azure App Service and Azure DevOps walkthrough](AZURE-SETUP.md) for the Linux App Service setup, federated service connection, application settings, pipeline, and rollback steps. Azure DevOps deploys successful `main` builds; the legacy GitHub deployment workflow is manual-only.
+
 ## Publish to a .NET host
 
 ```sh

@@ -1,12 +1,12 @@
-# DawnOfThePhoenix.Tests
+# DawnOfThePhoenix.Checks
 
-This xUnit/Shouldly project verifies... It references...
+This dependency-free executable runs C# checks against checkout validation, mocked Stripe responses, safe return URLs, and public configuration. It is not an xUnit/Shouldly project and is run with `dotnet run`, not `dotnet test`.
 
 ```sh
-dotnet test DawnOfThePhoenix.Tests/DawnOfThePhoenix.Tests.csproj
+dotnet run --project tests/DawnOfThePhoenix.Checks -c Release
 ```
 
-Use the SDK described in the [root README](../README.md).
+Use the SDK described in the [root README](../../README.md). For checks against the actual deployment package, see [published application checks](../deployment/README.md).
 
 ## Test conventions
 
