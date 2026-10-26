@@ -19,7 +19,7 @@ pool:
     vmImage: ubuntu-latest
 variables:
     buildConfiguration: Release
-    azureServiceConnection: DavidEaton
+    azureServiceConnection: azure-dawnofthephoenix
     webAppName: dawnofthephoenix
 stages:
     -   stage: Build
