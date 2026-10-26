@@ -4,9 +4,6 @@
 name: Build and deploy ASP.Net Core app to Azure Web App - DawnOfThePhoenix
 
 on:
-  push:
-    branches:
-      - 'main'
   workflow_dispatch:
 
 jobs:
@@ -62,4 +59,3 @@ jobs:
           app-name: 'DawnOfThePhoenix'
           slot-name: 'Production'
           package: .
-          
