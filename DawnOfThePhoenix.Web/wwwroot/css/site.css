@@ -651,6 +651,35 @@ details p {
     margin: auto;
     padding: 36px 0 60px;
 }
+.tip-disclosure {
+    border: 0;
+}
+.tip-toggle {
+    display: inline-flex;
+    justify-content: flex-start;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0;
+}
+.tip-toggle .eyebrow {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    transform: none;
+}
+.tip-toggle-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+}
+.tip-toggle:hover .tip-toggle-glyph {
+    border-color: var(--copper);
+}
 .tip-heading {
     max-width: 650px;
     margin-bottom: 24px;
