@@ -1,4 +1,3 @@
-# Linux App Service; verify the resource name and service connection before running.
 parameters:
     -   name: appType
         displayName: App Service operating system
