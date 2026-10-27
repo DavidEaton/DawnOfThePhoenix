@@ -7,7 +7,7 @@ dotnet publish DawnOfThePhoenix.Web -c Release -o /tmp/phoenix-publish
 bash tests/deployment/smoke-publish.sh /tmp/phoenix-publish
 ```
 
-The checks verify rendered pages, deployed CSS/JavaScript/favicon, the antiforgery token in the home page, secret-free public configuration, and rejection of a checkout POST without antiforgery credentials. The server gets a fake Stripe secret and a reserved test public URL. The rejected checkout makes no Stripe request or charge. The script uses no real account credentials.
+The checks verify rendered pages, deployed CSS/JavaScript/favicon, versioned SVG and ICO icon links, the root bookmark ICO response (content type, published bytes, and four-frame file header), the antiforgery token in the home page, secret-free public configuration, and rejection of a checkout POST without antiforgery credentials. The server gets a fake Stripe secret and a reserved test public URL. The rejected checkout makes no Stripe request or charge. The script uses no real account credentials.
 
 Run the existing C# checks as well for checkout validation and mocked Stripe behavior:
 

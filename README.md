@@ -107,6 +107,8 @@ All paths below are relative to `DawnOfThePhoenix.Web/`.
 
 `site.js` imports the feature modules directly in the browser. The server-provided `/config.js` is loaded first and contains only public booking paths, email, and payment readiness. Stripe keys remain server-side. Razor partials contain section markup; they do not make booking or payment requests.
 
+The tab icon source is `wwwroot/assets/favicon.svg`. The root `wwwroot/favicon.ico` supplies the same artwork to bookmark managers and browsers requesting `/favicon.ico` directly. Keep both in sync when changing the icon; the ICO contains 16, 32, 48, and 64-pixel frames. The layout versions both icon links for cache refresh. Existing bookmarks may retain their cached icon until the page is revisited or the bookmark is recreated after deployment.
+
 For a content change, edit the relevant partial. For a styling change, edit the matching section in `site.css`. For booking behavior, start in `booking.js`; for payment transport, start in `checkout.js`. The repository’s `.editorconfig` sets four-space indentation and consistent line endings. Formatting and organization do not introduce a Node.js build step.
 
 The superseded Node/Worker application has been removed. Supplied files were reference material; the user's current copy and prices govern the site. No invented testimonials or follower counts are included.
