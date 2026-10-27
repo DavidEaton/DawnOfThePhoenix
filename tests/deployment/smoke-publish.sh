@@ -52,6 +52,25 @@ assert_response() {
 
 assert_response / text/html PhoenixRising
 grep -Fq request-verification-token "$scratch_dir/body"
+# Bookmark managers may use the root ICO independently of the tab's SVG.
+# Versioned links also let browsers notice a replacement after deployment.
+ico_link="$(grep -E '<link[^>]*href="/favicon(\.[a-z0-9]+\.ico|\.ico\?v=[^"]+)"' "$scratch_dir/body")"
+grep -Fq 'rel="icon"' <<< "$ico_link"
+grep -Fq 'type="image/x-icon"' <<< "$ico_link"
+grep -Fq 'sizes="16x16 32x32 48x48 64x64"' <<< "$ico_link"
+svg_link="$(grep -E '<link[^>]*href="/assets/favicon(\.[a-z0-9]+\.svg|\.svg\?v=[^"]+)"' "$scratch_dir/body")"
+grep -Fq 'rel="icon"' <<< "$svg_link"
+grep -Fq 'type="image/svg+xml"' <<< "$svg_link"
+grep -Fq 'sizes="any"' <<< "$svg_link"
+curl --silent --show-error --fail --max-time 10 \
+    -D "$scratch_dir/headers" "$base_url/favicon.ico" -o "$scratch_dir/favicon.ico"
+grep -Eiq '^content-type: image/(x-icon|vnd.microsoft.icon)' "$scratch_dir/headers"
+cmp "$publish_dir/wwwroot/favicon.ico" "$scratch_dir/favicon.ico"
+ico_url="$(sed -n 's/.*href="\([^"]*\)".*/\1/p' <<< "$ico_link")"
+curl --silent --show-error --fail --max-time 10 "$base_url$ico_url" -o "$scratch_dir/linked-favicon.ico"
+cmp "$scratch_dir/favicon.ico" "$scratch_dir/linked-favicon.ico"
+# ICO header: reserved=0, type=icon, four frames. Prevent HTML/error fallbacks.
+[[ "$(od -An -tx1 -N6 "$scratch_dir/favicon.ico" | tr -d ' \n')" == 000001000400 ]]
 assert_response /terms text/html '<html'
 assert_response /privacy text/html '<html'
 assert_response /css/site.css text/css ':root'
