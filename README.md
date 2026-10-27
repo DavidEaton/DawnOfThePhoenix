@@ -55,7 +55,7 @@ Tips are optional; they do not purchase a reading or reserve a session. Live ses
 
 ## Cash App and PayPal tip jar
 
-The home page's `Pages/Home/_TipJar.cshtml` partial displays tappable payment links and locally hosted QR codes. They work without JavaScript or a Stripe key:
+The home page's `Pages/Home/_TipJar.cshtml` partial starts collapsed. Select the plus glyph beside **A LITTLE GRATITUDE** (tooltip: **Leave Dawn a tip**) to expand or collapse all tip content. The native disclosure supports keyboard and touch without JavaScript. Inside are tappable payment links and locally hosted QR codes. They work without JavaScript or a Stripe key:
 
 - Cash App: **Dawn Phoenix**, **$22PhoenixRising888**, linked to `https://cash.app/$22PhoenixRising888`.
 - PayPal: **Dawn Eaton**, **@Risingphoenix888**, using Dawn’s official PayPal receiving-code link: `https://www.paypal.com/qrcodes/p2pqrc/XBDN5S58CNNYQ`. The button and QR image contain this exact URL, with no preset amount. The supplied email remains a contact label; payment routing comes from PayPal’s own receiving code. Do not replace it with an email-derived merchant checkout URL or guess a PayPal.Me address.

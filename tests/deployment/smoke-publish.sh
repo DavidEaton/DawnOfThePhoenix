@@ -53,6 +53,20 @@ assert_response() {
 assert_response / text/html PhoenixRising
 grep -Fq request-verification-token "$scratch_dir/body"
 grep -Fq 'Leave Dawn a tip' "$scratch_dir/body"
+# A native disclosure must start closed and enclose every payment option and note.
+tip_disclosure="$(sed -n '/<details class="tip-disclosure">/,/<\/details>/p' "$scratch_dir/body")"
+[[ -n "$tip_disclosure" ]]
+grep -Fq 'title="Leave Dawn a tip" aria-label="Leave Dawn a tip"' <<< "$tip_disclosure"
+grep -Fq 'id="tip-label">A LITTLE GRATITUDE</span>' <<< "$tip_disclosure"
+grep -Fq 'class="tip-toggle-glyph" aria-hidden="true">+</span>' <<< "$tip_disclosure"
+for content in 'id="tip-heading"' 'class="tip-grid"' 'class="tip-other-options"' 'mailto:dawn@dawnofthephoenix.com'; do
+    grep -Fq "$content" <<< "$tip_disclosure"
+done
+if grep -Eq '<details[^>]*[[:space:]]open([[:space:]=/>])' <<< "$tip_disclosure"; then
+    echo 'FAIL: tip content must be collapsed by default.' >&2
+    exit 1
+fi
+
 grep -Fq 'Tips are optional and don’t purchase a reading or reserve a session.' "$scratch_dir/body"
 grep -Fq 'href="https://cash.app/$22PhoenixRising888"' "$scratch_dir/body"
 grep -Fq 'href="https://www.paypal.com/qrcodes/p2pqrc/XBDN5S58CNNYQ"' "$scratch_dir/body"
