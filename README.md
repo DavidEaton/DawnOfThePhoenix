@@ -58,7 +58,7 @@ Tips are optional; they do not purchase a reading or reserve a session. Live ses
 The home page's `Pages/Home/_TipJar.cshtml` partial displays tappable payment links and locally hosted QR codes. They work without JavaScript or a Stripe key:
 
 - Cash App: **Dawn Phoenix**, **$22PhoenixRising888**, linked to `https://cash.app/$22PhoenixRising888`.
-- PayPal: **Dawn Eaton**, **@Risingphoenix888**, using the supplied recipient email **dawn@dawnofthephoenix.com** in PayPal's standard payment link (`cmd=_xclick`). The handle is a display label; it is not assumed to be a PayPal.Me address. No amount is supplied; the sender chooses it on PayPal. Verify the email is associated with Dawn's receiving PayPal account and that her account supports this payment flow before launch.
+- PayPal: **Dawn Eaton**, **@Risingphoenix888**, using Dawn’s official PayPal receiving-code link: `https://www.paypal.com/qrcodes/p2pqrc/XBDN5S58CNNYQ`. The button and QR image contain this exact URL, with no preset amount. The supplied email remains a contact label; payment routing comes from PayPal’s own receiving code. Do not replace it with an email-derived merchant checkout URL or guess a PayPal.Me address.
 
 Venmo is omitted until Dawn supplies an official payment/profile link. Do not invent a recipient or use a placeholder payment destination. When Stripe is configured, **Tip by card** remains available and asks for an amount without a preselected value. Direct-provider tips do not create Stripe sessions or appear in Stripe payment history. Verify them in the relevant provider account.
 

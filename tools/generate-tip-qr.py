@@ -7,7 +7,6 @@ Use --check to verify the committed images match their intended destinations.
 import argparse
 from io import BytesIO
 from pathlib import Path
-from urllib.parse import quote, urlencode
 
 import qrcode
 from qrcode.image.svg import SvgPathFillImage
@@ -15,13 +14,7 @@ from qrcode.image.svg import SvgPathFillImage
 
 DESTINATIONS = {
     "cash-app": "https://cash.app/$22PhoenixRising888",
-    "paypal": "https://www.paypal.com/cgi-bin/webscr?" + urlencode({
-        "cmd": "_xclick",
-        "business": "dawn@dawnofthephoenix.com",
-        "item_name": "Tip for Dawn",
-        "currency_code": "USD",
-        "no_shipping": "1",
-    }, quote_via=quote),
+    "paypal": "https://www.paypal.com/qrcodes/p2pqrc/XBDN5S58CNNYQ",
 }
 
 

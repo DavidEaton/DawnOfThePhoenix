@@ -55,7 +55,12 @@ grep -Fq request-verification-token "$scratch_dir/body"
 grep -Fq 'Leave Dawn a tip' "$scratch_dir/body"
 grep -Fq 'Tips are optional and don’t purchase a reading or reserve a session.' "$scratch_dir/body"
 grep -Fq 'href="https://cash.app/$22PhoenixRising888"' "$scratch_dir/body"
-grep -Fq 'href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&amp;business=dawn%40dawnofthephoenix.com&amp;item_name=Tip%20for%20Dawn&amp;currency_code=USD&amp;no_shipping=1"' "$scratch_dir/body"
+grep -Fq 'href="https://www.paypal.com/qrcodes/p2pqrc/XBDN5S58CNNYQ"' "$scratch_dir/body"
+# The personal receiving code must not regress to an incompatible merchant checkout.
+if grep -Eq 'paypal\.com/cgi-bin/webscr|cmd=_xclick' "$scratch_dir/body"; then
+    echo 'FAIL: PayPal tips must use Dawn’s official receiving-code link.' >&2
+    exit 1
+fi
 # No guessed Venmo destination or preset amount, including on the provider links.
 if grep -Eiq 'venmo\.com|cash\.app/[^" ]+/[0-9]|[?&](amp;)?amount=' "$scratch_dir/body"; then
     echo 'FAIL: the tip jar contains an unconfigured provider or preset amount.' >&2
