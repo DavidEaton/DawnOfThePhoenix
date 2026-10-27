@@ -19,7 +19,7 @@ trap cleanup EXIT
     ASPNETCORE_ENVIRONMENT=Production DOTNET_ENVIRONMENT=Production \
         ASPNETCORE_URLS=http://127.0.0.1:0 \
         Site__PublicBaseUrl=https://deployment-test.example \
-        Stripe__SecretKey=smoke-test-secret-never-used \
+        Stripe__SecretKey="${SMOKE_STRIPE_SECRET-smoke-test-secret-never-used}" \
         dotnet DawnOfThePhoenix.Web.dll
 ) > "$scratch_dir/app.log" 2>&1 &
 app_pid=$!
@@ -52,6 +52,36 @@ assert_response() {
 
 assert_response / text/html PhoenixRising
 grep -Fq request-verification-token "$scratch_dir/body"
+grep -Fq 'Leave Dawn a tip' "$scratch_dir/body"
+grep -Fq 'Tips are optional and don’t purchase a reading or reserve a session.' "$scratch_dir/body"
+grep -Fq 'href="https://cash.app/$22PhoenixRising888"' "$scratch_dir/body"
+grep -Fq 'href="https://www.paypal.com/qrcodes/p2pqrc/XBDN5S58CNNYQ"' "$scratch_dir/body"
+# The personal receiving code must not regress to an incompatible merchant checkout.
+if grep -Eq 'paypal\.com/cgi-bin/webscr|cmd=_xclick' "$scratch_dir/body"; then
+    echo 'FAIL: PayPal tips must use Dawn’s official receiving-code link.' >&2
+    exit 1
+fi
+# No guessed Venmo destination or preset amount, including on the provider links.
+if grep -Eiq 'venmo\.com|cash\.app/[^" ]+/[0-9]|[?&](amp;)?amount=' "$scratch_dir/body"; then
+    echo 'FAIL: the tip jar contains an unconfigured provider or preset amount.' >&2
+    exit 1
+fi
+if [[ -n "${SMOKE_STRIPE_SECRET-smoke-test-secret-never-used}" ]]; then
+    grep -Fq 'id="tip"' "$scratch_dir/body"
+elif grep -Fq 'id="tip"' "$scratch_dir/body"; then
+    echo 'FAIL: card tipping must be hidden when Stripe is not configured.' >&2
+    exit 1
+fi
+# Both QR images must appear on the page and survive publishing/versioning.
+for method in cash-app paypal; do
+    qr_url="$(grep -Eo "src=\"/assets/tips/$method(\.[a-z0-9]+)?\.svg(\?v=[^\"]+)?\"" "$scratch_dir/body" | cut -d '"' -f 2)"
+    [[ -n "$qr_url" ]]
+    curl --silent --show-error --fail --max-time 10 \
+        -D "$scratch_dir/qr-headers" "$base_url$qr_url" -o "$scratch_dir/qr.svg"
+    grep -iq '^content-type: image/svg+xml' "$scratch_dir/qr-headers"
+    cmp "$publish_dir/wwwroot/assets/tips/$method.svg" "$scratch_dir/qr.svg"
+done
+# Keep the home-page response for the favicon checks below.
 # Bookmark managers may use the root ICO independently of the tab's SVG.
 # Versioned links also let browsers notice a replacement after deployment.
 ico_link="$(grep -E '<link[^>]*href="/favicon(\.[a-z0-9]+\.ico|\.ico\?v=[^"]+)"' "$scratch_dir/body")"

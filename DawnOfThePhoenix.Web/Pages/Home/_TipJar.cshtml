@@ -1,13 +1,45 @@
-<aside class="tip-bar">
-    <div>
-        <span aria-hidden="true">♡</span>
-        <div>
-            <h3>A little gratitude goes a long way.</h3>
-            <p>If Dawn’s work has touched your life, you’re welcome to leave a tip.</p>
-        </div>
+@using DawnOfThePhoenix.Web.Options
+@using Microsoft.Extensions.Options
+@inject IOptions<StripeOptions> StripeSettings
+
+<section class="tip-jar" id="tip-jar" aria-labelledby="tip-heading">
+    <div class="tip-heading">
+        <p class="eyebrow">A LITTLE GRATITUDE</p>
+        <h2 id="tip-heading">Leave Dawn a tip</h2>
+        <p>If Dawn’s work has touched your life, you’re welcome to leave a little love.</p>
+        <p>Tips are optional and don’t purchase a reading or reserve a session.</p>
     </div>
-    <button class="text-link" id="tip">
-        Leave a little love
-        <span>↗</span>
-    </button>
-</aside>
+    <div class="tip-grid">
+        <article class="tip-payment" aria-labelledby="cash-app-heading">
+            <h3 id="cash-app-heading">Cash App</h3>
+            <p>Dawn Phoenix</p>
+            <p class="tip-recipient">$22PhoenixRising888</p>
+            <a class="button outline" href="https://cash.app/$22PhoenixRising888" target="_blank" rel="noopener noreferrer">
+                Tip with Cash App <span aria-hidden="true">↗</span>
+            </a>
+            <img class="tip-qr" src="~/assets/tips/cash-app.svg" asp-append-version="true" width="240" height="240"
+                 loading="lazy" alt="Scan to tip Dawn Phoenix, $22PhoenixRising888, with Cash App" />
+            <p class="tip-scan-note">Scan with your phone’s camera, or tap the button.</p>
+        </article>
+        <article class="tip-payment" aria-labelledby="paypal-heading">
+            <h3 id="paypal-heading">PayPal</h3>
+            <p>Dawn Eaton · @@Risingphoenix888</p>
+            <p class="tip-recipient">dawn@dawnofthephoenix.com</p>
+            <a class="button outline" href="https://www.paypal.com/qrcodes/p2pqrc/XBDN5S58CNNYQ" target="_blank" rel="noopener noreferrer">
+                Tip with PayPal <span aria-hidden="true">↗</span>
+            </a>
+            <img class="tip-qr" src="~/assets/tips/paypal.svg" asp-append-version="true" width="240" height="240"
+                 loading="lazy" alt="Scan Dawn Eaton’s official PayPal receiving code" />
+            <p class="tip-scan-note">Scan with your phone’s camera, or tap the button.</p>
+        </article>
+    </div>
+    <div class="tip-other-options">
+        @if (!string.IsNullOrWhiteSpace(StripeSettings.Value.SecretKey))
+        {
+            <button class="button" id="tip" type="button">Tip by card <span aria-hidden="true">↗</span></button>
+        }
+        <p>Choose your own amount on the payment page. Check Dawn’s recipient details before sending.</p>
+        <p>Payment links open in a new tab. Your phone may open the provider’s app if installed.</p>
+        <p>Questions? <a href="mailto:dawn@dawnofthephoenix.com">Email Dawn</a>.</p>
+    </div>
+</section>

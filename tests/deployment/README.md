@@ -9,6 +9,14 @@ bash tests/deployment/smoke-publish.sh /tmp/phoenix-publish
 
 The checks verify rendered pages, deployed CSS/JavaScript/favicon, versioned SVG and ICO icon links, the root bookmark ICO response (content type, published bytes, and four-frame file header), the antiforgery token in the home page, secret-free public configuration, and rejection of a checkout POST without antiforgery credentials. The server gets a fake Stripe secret and a reserved test public URL. The rejected checkout makes no Stripe request or charge. The script uses no real account credentials.
 
+Tip-jar checks verify the supplied Cash App recipient, exact PayPal-issued receiving-code destination (and rejection of merchant-checkout links), optional-tip wording, open amounts, no guessed Venmo link, and both published QR image responses. Run the checks again without Stripe to verify that the direct payment methods remain available while the card button is hidden:
+
+```sh
+SMOKE_STRIPE_SECRET='' bash tests/deployment/smoke-publish.sh /tmp/phoenix-publish
+```
+
+For deterministic QR image validation, use `python tools/generate-tip-qr.py --check` in the optional QR tooling environment described in the [root README](../../README.md). It checks the committed module patterns against freshly generated codes for the documented destinations. This does not verify provider account ownership or complete a payment.
+
 Run the existing C# checks as well for checkout validation and mocked Stripe behavior:
 
 ```sh
