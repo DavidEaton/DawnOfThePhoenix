@@ -53,6 +53,28 @@ Written readings collect three required yes/no questions (150 characters each) a
 
 Tips are optional; they do not purchase a reading or reserve a session. Live session purchases use Cal.com's Stripe integration rather than the written-reading checkout endpoint.
 
+## Cash App and PayPal tip jar
+
+The home page's `Pages/Home/_TipJar.cshtml` partial displays tappable payment links and locally hosted QR codes. They work without JavaScript or a Stripe key:
+
+- Cash App: **Dawn Phoenix**, **$22PhoenixRising888**, linked to `https://cash.app/$22PhoenixRising888`.
+- PayPal: **Dawn Eaton**, **@Risingphoenix888**, using the supplied recipient email **dawn@dawnofthephoenix.com** in PayPal's standard payment link (`cmd=_xclick`). The handle is a display label; it is not assumed to be a PayPal.Me address. No amount is supplied; the sender chooses it on PayPal. Verify the email is associated with Dawn's receiving PayPal account and that her account supports this payment flow before launch.
+
+Venmo is omitted until Dawn supplies an official payment/profile link. Do not invent a recipient or use a placeholder payment destination. When Stripe is configured, **Tip by card** remains available and asks for an amount without a preselected value. Direct-provider tips do not create Stripe sessions or appear in Stripe payment history. Verify them in the relevant provider account.
+
+The QR codes contain the same HTTPS URLs as the buttons; they contain no amount, login credentials, or tracking redirect. The browser/provider decides whether to open its app or a web page. They use black modules on white with a four-module quiet zone and error correction M. No external QR service is contacted when the page loads.
+
+To regenerate after a recipient/link change, use optional development tooling (not required to build, run, or deploy the site):
+
+```sh
+python -m venv /tmp/phoenix-qr-tools
+/tmp/phoenix-qr-tools/bin/python -m pip install qrcode==8.2
+/tmp/phoenix-qr-tools/bin/python tools/generate-tip-qr.py
+/tmp/phoenix-qr-tools/bin/python tools/generate-tip-qr.py --check
+```
+
+Update the destinations in `tools/generate-tip-qr.py`, the button links/recipient labels in the partial, and the relevant deployment checks together. Scan both codes and confirm the intended recipient and editable amount on actual phones before accepting tips; don't complete test payments accidentally. The supplied public email remains the contact link for questions.
+
 ## Azure deployment
 
 See [the Azure App Service and Azure DevOps walkthrough](AZURE-SETUP.md) for the Linux App Service setup, federated service connection, application settings, pipeline, and rollback steps. Azure DevOps deploys successful `main` builds; the legacy GitHub deployment workflow is manual-only.
@@ -96,7 +118,9 @@ All paths below are relative to `DawnOfThePhoenix.Web/`.
 | Browser startup | `wwwroot/js/site.js` |
 | Cal.com booking and email booking fallback | `wwwroot/js/booking.js` |
 | Written-reading UI and email questions | `wwwroot/js/readings.js` |
-| Tip UI and email fallback | `wwwroot/js/tips.js` |
+| Cash App / PayPal tip links and QR cards | `Pages/Home/_TipJar.cshtml` |
+| Stripe tip amount dialog | `wwwroot/js/tips.js` |
+| QR images and regeneration | `wwwroot/assets/tips/`, root `tools/generate-tip-qr.py` |
 | Payment API calls, redirects, and return-page verification | `wwwroot/js/checkout.js` |
 | Public browser configuration and URL/email helpers | `wwwroot/js/configuration.js` |
 | Shared dialog, navigation, and privacy popup | `wwwroot/js/dialog.js`, `wwwroot/js/layout.js` |

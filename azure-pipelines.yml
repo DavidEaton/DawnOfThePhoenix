@@ -39,6 +39,8 @@ stages:
                         displayName: Publish web application
                     -   bash: bash tests/deployment/smoke-publish.sh "$(Build.ArtifactStagingDirectory)/publish"
                         displayName: Smoke check published application
+                    -   bash: SMOKE_STRIPE_SECRET='' bash tests/deployment/smoke-publish.sh "$(Build.ArtifactStagingDirectory)/publish"
+                        displayName: Verify tip jar without Stripe
                     -   task: ArchiveFiles@2
                         inputs:
                             rootFolderOrFile: $(Build.ArtifactStagingDirectory)/publish
