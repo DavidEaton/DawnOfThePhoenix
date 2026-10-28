@@ -68,6 +68,8 @@ Double underscores map to nested ASP.NET configuration. Do not commit the Stripe
 
 The website can render without payment/booking credentials, using its existing unavailable/email fallback behavior. Configure and verify those accounts before accepting customers. Cal.com handles live-session bookings; the server-side Stripe key handles written readings and tips. They are separate setups. Configure Stripe Checkout terms consent using this site's `/terms` URL.
 
+For paid-session email and SMS alerts, also configure all values and the Cal.com webhook in [CAL-COM-SETUP.md](CAL-COM-SETUP.md). Use `/home/data/phoenix-booking-alerts` for `BookingAlerts__StateDirectory` on Linux App Service, outside the ZIP deployment, and keep the app at one instance until a shared transactional delivery journal is implemented. Verify both SendGrid and Twilio delivery logs and preserve the journal across deployments/rollback.
+
 When adding a custom domain later, bind it and its HTTPS certificate in Azure, change `Site__PublicBaseUrl` to that canonical HTTPS origin, and add the domain to `AllowedHosts` (semicolon-separated when keeping multiple hostnames).
 
 ## 5. Create and run the pipeline
@@ -92,7 +94,7 @@ Open the Azure URL in a private/incognito browser window:
 
 - Check the home page, images, CSS, JavaScript, `/terms`, and `/privacy`.
 - Confirm HTTPS loads without a redirect loop.
-- Verify both Cal.com event types.
+- Verify both Cal.com paid event types, customer confirmations, calendar entries, and Dawn’s email and SMS alerts. Complete the payment-failure and webhook replay checks in `CAL-COM-SETUP.md`.
 - Complete written-reading and tip checkout using Stripe test mode; check paid, cancelled, and failed/invalid paths and return URLs.
 - Confirm the expected price, required questions, and reply email in Stripe before switching to a live secret.
 

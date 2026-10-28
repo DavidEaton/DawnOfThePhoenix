@@ -22,6 +22,8 @@ The email fallback works without account credentials. Live booking and payment a
 
 ## Connect Cal.com
 
+Follow [Cal.com paid sessions and Dawn’s alerts](CAL-COM-SETUP.md) for required event/payment setup, signed paid-booking webhooks, SendGrid email, Twilio SMS, durable retry records, and the activation checklist. Account configuration and a successful end-to-end test are required before accepting customers.
+
 Create Dawn's account at https://cal.com/signup, connect her calendar, and set timezone, availability, buffers, meeting location/video provider, and confirmation details. Create:
 
 - **30-minute reading:** $30 USD, suggested slug `30-minute-reading`.
@@ -128,6 +130,7 @@ All paths below are relative to `DawnOfThePhoenix.Web/`.
 | Secret-free `/config.js` response | `Pages/Configuration.cshtml.cs` |
 | Checkout request validation and payment status handlers | `Pages/Api/` |
 | Server-side Stripe HTTP requests | `Services/StripeCheckoutService.cs` |
+| Signed paid-booking webhook and email/SMS delivery | `Pages/Api/CalWebhook.cshtml.cs`, `Services/PaidBookingService.cs` |
 
 `site.js` imports the feature modules directly in the browser. The server-provided `/config.js` is loaded first and contains only public booking paths, email, and payment readiness. Stripe keys remain server-side. Razor partials contain section markup; they do not make booking or payment requests.
 
@@ -144,4 +147,4 @@ dotnet build DawnOfThePhoenix.slnx
 dotnet run --project tests/DawnOfThePhoenix.Checks
 ```
 
-The dependency-free C# checks mock Stripe's HTTP responses; they make no charges. They cover request/amount validation, the fixed $30 price, required question fields, tip bounds, error redaction, safe redirects, payment status, and secret-free public configuration. Local HTTP smoke checks also verified Razor rendering, assets, routes, and antiforgery rejection. Live Stripe/Cal.com transactions still require the accounts to be configured; visual browser QA remains unverified in this environment.
+The dependency-free C# checks mock Stripe, SendGrid, and Twilio HTTP responses; they make no charges or real notification deliveries. Optional booking-dialog checks run with Node.js 22 or newer: `node tests/browser/booking.mjs` (no npm packages). Node.js is not required to build, run, or publish the application. They cover request/amount validation, the fixed $30 price, required question fields, tip bounds, error redaction, safe redirects, payment status, and secret-free public configuration. Local HTTP smoke checks also verified Razor rendering, assets, routes, and antiforgery rejection. Live Stripe/Cal.com transactions still require the accounts to be configured; visual browser QA remains unverified in this environment.
