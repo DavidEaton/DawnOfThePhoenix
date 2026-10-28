@@ -13,6 +13,10 @@ builder.Services.AddHttpClient<StripeCheckoutService>(client =>
     client.Timeout = TimeSpan.FromSeconds(15);
 });
 
+builder.Services.Configure<BookingAlertOptions>(builder.Configuration.GetSection("BookingAlerts"));
+builder.Services.AddHttpClient<PaidBookingService>(client => client.Timeout = TimeSpan.FromSeconds(10))
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {

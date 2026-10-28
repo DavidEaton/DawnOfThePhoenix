@@ -1,5 +1,6 @@
 import { bookingUrl, emailLink } from './configuration.js';
 import { showDialog } from './dialog.js';
+import { mountCalendar } from './cal-embed.js';
 
 export function initializeBooking() {
     document.querySelectorAll('[data-book]').forEach((button) => {
@@ -8,6 +9,19 @@ export function initializeBooking() {
 }
 
 function openBooking(kind) {
+    if (kind === 'choose') {
+        showDialog(`
+            <p class="eyebrow">LET’S CONNECT</p>
+            <h2>Choose your session.</h2>
+            <div class="modal-options">
+                <button class="button" id="book-thirty" type="button">30-minute session · $30</button>
+                <button class="button" id="book-hour" type="button">60-minute session · $55</button>
+            </div>
+        `);
+        document.querySelector('#book-thirty').addEventListener('click', () => openBooking('thirty'));
+        document.querySelector('#book-hour').addEventListener('click', () => openBooking('hour'));
+        return;
+    }
     const link = bookingUrl(kind);
     if (link) {
         showCalendar(link);
@@ -21,6 +35,7 @@ function showCalendar(link) {
     showDialog(`
         <p class="eyebrow">YOUR MOMENT STARTS HERE</p>
         <h2>Book time with Dawn.</h2>
+        <p id="calendar-status" role="status">Loading Dawn’s calendar…</p>
         <div id="calendar"></div>
         <p class="modal-note">
             If the calendar doesn’t load,
@@ -30,11 +45,8 @@ function showCalendar(link) {
         </p>
     `);
 
-    const frame = document.createElement('iframe');
-    frame.title = 'Schedule a session with Dawn';
-    frame.src = link;
-    document.querySelector('#calendar').append(frame);
     document.querySelector('#external-calendar').href = link;
+    mountCalendar(link, document.querySelector('#calendar'), document.querySelector('#calendar-status'));
 }
 
 function showEmailBooking(kind) {
@@ -53,7 +65,7 @@ function showEmailBooking(kind) {
             your session and payment. Your time is confirmed directly with Dawn.
         </p>
         <div class="modal-options" id="booking-options"></div>
-        <p class="modal-note">No payment is collected on this website.</p>
+        <p class="modal-note">This email request does not reserve a time or collect payment.</p>
     `);
 
     const options =

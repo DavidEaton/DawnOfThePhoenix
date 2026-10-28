@@ -20,6 +20,13 @@ trap cleanup EXIT
         ASPNETCORE_URLS=http://127.0.0.1:0 \
         Site__PublicBaseUrl=https://deployment-test.example \
         Stripe__SecretKey="${SMOKE_STRIPE_SECRET-smoke-test-secret-never-used}" \
+        CalCom__Username=smoke-dawn CalCom__ThirtyMinuteEvent=30-minute-reading \
+        CalCom__SixtyMinuteEvent=60-minute-reading CalCom__ThirtyMinuteEventId=30 CalCom__SixtyMinuteEventId=60 \
+        CalCom__WebhookSecret=smoke-cal-secret BookingAlerts__EmailTo=dawn@example.com \
+        BookingAlerts__EmailFrom=bookings@example.com BookingAlerts__SendGridApiKey=smoke-sendgrid-secret \
+        BookingAlerts__TwilioAccountSid=smoke-sid BookingAlerts__TwilioAuthToken=smoke-twilio-secret \
+        BookingAlerts__SmsFrom=+15005550006 BookingAlerts__SmsTo=+15005550007 \
+        BookingAlerts__StateDirectory="$scratch_dir/alert-state" \
         dotnet DawnOfThePhoenix.Web.dll
 ) > "$scratch_dir/app.log" 2>&1 &
 app_pid=$!
@@ -121,7 +128,9 @@ assert_response /css/site.css text/css ':root'
 assert_response /js/site.js text/javascript import
 assert_response /assets/favicon.svg image/svg+xml '<svg'
 assert_response /config.js application/javascript 'window.PHOENIX_CONFIG'
-if grep -Fq smoke-test-secret-never-used "$scratch_dir/body"; then
+grep -Fq 'https://cal.com/smoke-dawn/30-minute-reading' "$scratch_dir/body"
+grep -Fq 'https://cal.com/smoke-dawn/60-minute-reading' "$scratch_dir/body"
+if grep -Eq 'smoke-test-secret-never-used|smoke-cal-secret|smoke-sendgrid-secret|smoke-twilio-secret|15005550007' "$scratch_dir/body"; then
     echo 'FAIL: public configuration exposed a server secret.' >&2
     exit 1
 fi
@@ -134,4 +143,12 @@ if [[ "$status" != 400 ]]; then
     echo "FAIL: checkout without an antiforgery token returned $status instead of 400." >&2
     exit 1
 fi
-echo 'PASS: published pages, assets, private configuration, and checkout antiforgery protection.'
+# Webhook uses HMAC rather than browser antiforgery, while checkout above still requires it.
+status="$(curl --silent --show-error --max-time 10 -o "$scratch_dir/webhook" \
+    -w '%{http_code}' -H 'Content-Type: application/json' \
+    -d '{"triggerEvent":"BOOKING_PAID"}' "$base_url/api/cal/webhook")"
+[[ "$status" == 401 ]]
+[[ ! -d "$scratch_dir/alert-state" ]]
+assert_response /js/booking.js text/javascript "mountCalendar"
+assert_response /js/cal-embed.js text/javascript "https://app.cal.com/embed/embed.js"
+echo 'PASS: published pages, assets, private configuration, checkout antiforgery, and webhook authentication.'

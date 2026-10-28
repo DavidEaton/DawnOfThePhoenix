@@ -800,6 +800,15 @@ dialog {
     max-height: 90dvh;
     padding: 42px;
 }
+dialog:has(#calendar) {
+    width: min(1100px, calc(100% - 32px));
+    padding: clamp(18px, 3vw, 42px);
+}
+#calendar {
+    min-height: 560px;
+    width: 100%;
+    color-scheme: dark;
+}
 dialog::backdrop {
     background: #09090dd9;
     backdrop-filter: blur(8px);

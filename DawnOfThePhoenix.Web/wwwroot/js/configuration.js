@@ -13,9 +13,9 @@ export function httpsUrl(value) {
 export function bookingUrl(kind) {
     const url =
         kind === 'thirty'
-            ? configuration.thirtyMinuteUrl || configuration.bookingUrl
+            ? configuration.thirtyMinuteUrl
             : kind === 'hour'
-              ? configuration.sixtyMinuteUrl || configuration.bookingUrl
+              ? configuration.sixtyMinuteUrl
               : configuration.bookingUrl;
 
     return httpsUrl(url);
