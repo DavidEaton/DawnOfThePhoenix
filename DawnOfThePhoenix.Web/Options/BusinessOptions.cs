@@ -1,3 +1,5 @@
+using System.Net.Mail;
+
 namespace DawnOfThePhoenix.Web.Options;
 
 public sealed class CalComOptions
@@ -23,12 +25,26 @@ public sealed class SiteOptions
 
 public sealed class BookingAlertOptions
 {
-    public string EmailTo { get; set; } = "";
-    public string EmailFrom { get; set; } = "";
-    public string SendGridApiKey { get; set; } = "";
     public string TwilioAccountSid { get; set; } = "";
     public string TwilioAuthToken { get; set; } = "";
     public string SmsFrom { get; set; } = "";
     public string SmsTo { get; set; } = "";
     public string StateDirectory { get; set; } = "";
+}
+
+public sealed class PaymentEmailOptions
+{
+    public bool Enabled { get; set; }
+    public string WebhookSecret { get; set; } = "";
+    public string Host { get; set; } = "mail.privateemail.com";
+    public int Port { get; set; } = 587;
+    public string Username { get; set; } = "dawdawn@dawnofthephoenix.com";
+    public string Password { get; set; } = "";
+    public string Recipient { get; set; } = "dawdawn@dawnofthephoenix.com";
+    public string QueueDirectory { get; set; } = "";
+    public bool IsConfigured => IsSmtpConfigured && WebhookSecret.StartsWith("whsec_", StringComparison.Ordinal)
+        && Path.IsPathFullyQualified(QueueDirectory);
+    public bool IsSmtpConfigured => Enabled && !string.IsNullOrWhiteSpace(Password)
+        && Port == 587 && !string.IsNullOrWhiteSpace(Host)
+        && MailAddress.TryCreate(Username, out _) && MailAddress.TryCreate(Recipient, out _);
 }

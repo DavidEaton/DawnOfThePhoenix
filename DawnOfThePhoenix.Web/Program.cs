@@ -16,6 +16,10 @@ builder.Services.AddHttpClient<StripeCheckoutService>(client =>
 builder.Services.Configure<BookingAlertOptions>(builder.Configuration.GetSection("BookingAlerts"));
 builder.Services.AddHttpClient<PaidBookingService>(client => client.Timeout = TimeSpan.FromSeconds(10))
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+builder.Services.Configure<PaymentEmailOptions>(builder.Configuration.GetSection("PaymentEmail"));
+builder.Services.AddSingleton<PaymentEmailQueue>();
+builder.Services.AddSingleton<IPaymentEmailSender, PrivateEmailSender>();
+builder.Services.AddHostedService<PaymentEmailWorker>();
 
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())
@@ -32,6 +36,7 @@ app.Use(async (context, next) =>
 });
 app.UseRouting();
 app.UseAuthorization();
+app.MapPost("/api/stripe/webhook", PaymentWebhook.HandleAsync);
 app.MapStaticAssets();
 app.MapRazorPages().WithStaticAssets();
 app.Run();

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Options;
 
 await PaidBookingServiceShould.RunAsync();
+await PaymentWebhookShould.RunAsync();
 
 var handler = new FakeStripeHandler();
 var client = new HttpClient(handler) { BaseAddress = new Uri("https://api.stripe.com/v1/") };

@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
+using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -10,7 +10,8 @@ using Microsoft.Extensions.Options;
 namespace DawnOfThePhoenix.Web.Services;
 
 public sealed class PaidBookingService(
-    HttpClient client, IOptions<CalComOptions> calOptions, IOptions<BookingAlertOptions> alertOptions)
+    HttpClient client, IOptions<CalComOptions> calOptions, IOptions<BookingAlertOptions> alertOptions,
+    IPaymentEmailSender emailSender, IOptions<PaymentEmailOptions> emailOptions)
 {
     private readonly CalComOptions cal = calOptions.Value;
     private readonly BookingAlertOptions alerts = alertOptions.Value;
@@ -18,7 +19,8 @@ public sealed class PaidBookingService(
     public bool IsConfigured => !string.IsNullOrWhiteSpace(cal.WebhookSecret)
         && !string.IsNullOrWhiteSpace(cal.Username) && cal.ThirtyMinuteEventId > 0 && cal.SixtyMinuteEventId > 0
         && Path.IsPathFullyQualified(alerts.StateDirectory)
-        && new[] { alerts.EmailTo, alerts.EmailFrom, alerts.SendGridApiKey, alerts.TwilioAccountSid,
+        && emailOptions.Value.IsSmtpConfigured
+        && new[] { alerts.TwilioAccountSid,
             alerts.TwilioAuthToken, alerts.SmsFrom, alerts.SmsTo, alerts.StateDirectory }.All(v => !string.IsNullOrWhiteSpace(v));
 
     public bool Verify(byte[] body, string signature)
@@ -65,7 +67,7 @@ public sealed class PaidBookingService(
                 await File.WriteAllTextAsync(marker + ".tmp", "accepted", cancellationToken);
                 File.Move(marker + ".tmp", marker, overwrite: true);
             }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+            catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or SmtpException)
             {
                 failed = true; // Still attempt the other channel; return 503 so Cal.com can retry.
             }
@@ -75,29 +77,19 @@ public sealed class PaidBookingService(
 
     private async Task SendAsync(string channel, string text, CancellationToken cancellationToken)
     {
-        using var request = channel == "email"
-            ? new HttpRequestMessage(HttpMethod.Post, "https://api.sendgrid.com/v3/mail/send")
-            : new HttpRequestMessage(HttpMethod.Post,
-                $"https://api.twilio.com/2010-04-01/Accounts/{Uri.EscapeDataString(alerts.TwilioAccountSid)}/Messages.json");
         if (channel == "email")
         {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", alerts.SendGridApiKey);
-            request.Content = JsonContent.Create(new
-            {
-                personalizations = new[] { new { to = new[] { new { email = alerts.EmailTo } } } },
-                from = new { email = alerts.EmailFrom }, subject = "Paid session booked — DawnOfThePhoenix",
-                content = new[] { new { type = "text/plain", value = text } }
-            });
+            await emailSender.SendAsync(new PaymentEmail("cal-booking", "Paid session booked — DawnOfThePhoenix", text), cancellationToken);
+            return;
         }
-        else
+        using var request = new HttpRequestMessage(HttpMethod.Post,
+            $"https://api.twilio.com/2010-04-01/Accounts/{Uri.EscapeDataString(alerts.TwilioAccountSid)}/Messages.json");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Basic",
+            Convert.ToBase64String(Encoding.UTF8.GetBytes($"{alerts.TwilioAccountSid}:{alerts.TwilioAuthToken}")));
+        request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Basic",
-                Convert.ToBase64String(Encoding.UTF8.GetBytes($"{alerts.TwilioAccountSid}:{alerts.TwilioAuthToken}")));
-            request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                ["From"] = alerts.SmsFrom, ["To"] = alerts.SmsTo, ["Body"] = text
-            });
-        }
+            ["From"] = alerts.SmsFrom, ["To"] = alerts.SmsTo, ["Body"] = text
+        });
         using var response = await client.SendAsync(request, cancellationToken);
         if (!response.IsSuccessStatusCode) throw new HttpRequestException("Booking alert provider unavailable.");
     }

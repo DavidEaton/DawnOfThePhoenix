@@ -22,7 +22,7 @@ The email fallback works without account credentials. Live booking and payment a
 
 ## Connect Cal.com
 
-Follow [Cal.com paid sessions and Dawn’s alerts](CAL-COM-SETUP.md) for required event/payment setup, signed paid-booking webhooks, SendGrid email, Twilio SMS, durable retry records, and the activation checklist. Account configuration and a successful end-to-end test are required before accepting customers.
+Follow [Cal.com paid sessions and Dawn’s alerts](CAL-COM-SETUP.md) for required event/payment setup, signed paid-booking webhooks, Namecheap Private Email, Twilio SMS, durable retry records, and the activation checklist. Account configuration and a successful end-to-end test are required before accepting customers.
 
 Create Dawn's account at https://cal.com/signup, connect her calendar, and set timezone, availability, buffers, meeting location/video provider, and confirmation details. Create:
 
@@ -51,7 +51,7 @@ Do not commit real keys to `appsettings.json`, a `.dev.vars` file, Git, or chat.
 
 Checkout is implemented server-side in C# with `HttpClient`; the secret never appears in public configuration. Razor Pages validates an antiforgery cookie/token on checkout requests. The server fixes the written reading price at $30 and validates whole-dollar tips from $1 to $1,000. Return-page payment status is checked against Stripe.
 
-Written readings collect three required yes/no questions (150 characters each) and a reply email in Stripe Checkout. Dawn fulfills them manually by viewing the paid Checkout session/custom fields in Stripe, then replying within 48 hours of payment. This app does not automate the readings or order emails. Enable customer receipts and merchant payment notifications in Stripe. Set the public business terms URL in Stripe to your website's `/terms` page before using Checkout terms consent. Stripe's live payment activation is required before real purchases.
+Written readings collect three required yes/no questions (150 characters each) and a reply email in Stripe Checkout. Dawn fulfills them manually by viewing the paid Checkout session/custom fields in Stripe, then replying within 48 hours of payment. This app does not automate readings. Optional payment notification emails use the existing Namecheap Private Email mailbox; see AZURE-SETUP.md. Enable customer receipts in Stripe. Merchant payment notifications can remain enabled as a backup. Set the public business terms URL in Stripe to your website's `/terms` page before using Checkout terms consent. Stripe's live payment activation is required before real purchases.
 
 Tips are optional; they do not purchase a reading or reserve a session. Live session purchases use Cal.com's Stripe integration rather than the written-reading checkout endpoint.
 
@@ -129,6 +129,7 @@ All paths below are relative to `DawnOfThePhoenix.Web/`.
 | Server-side configuration options | `Options/BusinessOptions.cs` and the settings described above |
 | Secret-free `/config.js` response | `Pages/Configuration.cshtml.cs` |
 | Checkout request validation and payment status handlers | `Pages/Api/` |
+| Paid Checkout webhook, SMTP queue, and delivery | `Services/PaymentNotifications.cs` |
 | Server-side Stripe HTTP requests | `Services/StripeCheckoutService.cs` |
 | Signed paid-booking webhook and email/SMS delivery | `Pages/Api/CalWebhook.cshtml.cs`, `Services/PaidBookingService.cs` |
 
@@ -147,4 +148,4 @@ dotnet build DawnOfThePhoenix.slnx
 dotnet run --project tests/DawnOfThePhoenix.Checks
 ```
 
-The dependency-free C# checks mock Stripe, SendGrid, and Twilio HTTP responses; they make no charges or real notification deliveries. Optional booking-dialog checks run with Node.js 22 or newer: `node tests/browser/booking.mjs` (no npm packages). Node.js is not required to build, run, or publish the application. They cover request/amount validation, the fixed $30 price, required question fields, tip bounds, error redaction, safe redirects, payment status, and secret-free public configuration. Local HTTP smoke checks also verified Razor rendering, assets, routes, and antiforgery rejection. Live Stripe/Cal.com transactions still require the accounts to be configured; visual browser QA remains unverified in this environment.
+The dependency-free C# checks mock Stripe and Twilio HTTP responses and SMTP delivery; they make no charges or real notification deliveries. Optional booking-dialog checks run with Node.js 22 or newer: `node tests/browser/booking.mjs` (no npm packages). Node.js is not required to build, run, or publish the application. They cover request/amount validation, the fixed $30 price, required question fields, tip bounds, error redaction, safe redirects, payment status, and secret-free public configuration. Local HTTP smoke checks also verified Razor rendering, assets, routes, and antiforgery rejection. Live Stripe/Cal.com transactions still require the accounts to be configured; visual browser QA remains unverified in this environment.
