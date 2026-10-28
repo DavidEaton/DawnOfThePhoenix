@@ -52,6 +52,15 @@ assert_response() {
 
 assert_response / text/html PhoenixRising
 grep -Fq request-verification-token "$scratch_dir/body"
+# Customers must see the delivery trigger and both configured/unconfigured paths.
+grep -Fq 'Written readings are answered within 48 hours of payment.' "$scratch_dir/body"
+grep -Fq 'Dawn responds by email within 48 hours of payment.' "$scratch_dir/body"
+grep -Fq 'enter your questions and reply email at Stripe checkout.' "$scratch_dir/body"
+grep -Fq 'prepare an email and arrange payment directly with Dawn.' "$scratch_dir/body"
+if grep -Fq 'The question form explains how to contact Dawn and arrange payment.' "$scratch_dir/body"; then
+    echo 'FAIL: written-reading FAQ still describes only the email fallback.' >&2
+    exit 1
+fi
 grep -Fq 'Leave Dawn a tip' "$scratch_dir/body"
 # A native disclosure must start closed and enclose every payment option and note.
 tip_disclosure="$(sed -n '/<details class="tip-disclosure">/,/<\/details>/p' "$scratch_dir/body")"
