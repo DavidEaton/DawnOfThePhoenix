@@ -38,9 +38,9 @@ public sealed class PaymentEmailOptions
     public string WebhookSecret { get; set; } = "";
     public string Host { get; set; } = "mail.privateemail.com";
     public int Port { get; set; } = 587;
-    public string Username { get; set; } = "dawdawn@dawnofthephoenix.com";
+    public string Username { get; set; } = "dawn@dawnofthephoenix.com";
     public string Password { get; set; } = "";
-    public string Recipient { get; set; } = "dawdawn@dawnofthephoenix.com";
+    public string Recipient { get; set; } = "dawn@dawnofthephoenix.com";
     public string QueueDirectory { get; set; } = "";
     public bool IsConfigured => IsSmtpConfigured && WebhookSecret.StartsWith("whsec_", StringComparison.Ordinal)
         && Path.IsPathFullyQualified(QueueDirectory);

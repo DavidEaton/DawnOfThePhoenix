@@ -117,7 +117,7 @@ The pipeline has been prepared locally. Azure resource settings, service connect
 
 ## Payment notification emails through Namecheap Private Email
 
-The app can notify Dawn about paid written readings and card tips through the existing `dawdawn@dawnofthephoenix.com` mailbox. No SendGrid/Plunk account or separate email subscription is needed. Existing Namecheap mailbox charges and sending limits still apply. This address is used only for notification sending/receiving; the public site contact address is unchanged.
+The app can notify Dawn about paid written readings and card tips through the existing `dawn@dawnofthephoenix.com` mailbox. No SendGrid/Plunk account or separate email subscription is needed. Existing Namecheap mailbox charges and sending limits still apply. This address is used only for notification sending/receiving; the public site contact address is unchanged.
 
 Add these **App Service environment variables** (never commit passwords):
 
@@ -126,8 +126,8 @@ Add these **App Service environment variables** (never commit passwords):
 | `PaymentEmail__Enabled` | `true` |
 | `PaymentEmail__Host` | `mail.privateemail.com` |
 | `PaymentEmail__Port` | `587` |
-| `PaymentEmail__Username` | `dawdawn@dawnofthephoenix.com` |
-| `PaymentEmail__Recipient` | `dawdawn@dawnofthephoenix.com` |
+| `PaymentEmail__Username` | `dawn@dawnofthephoenix.com` |
+| `PaymentEmail__Recipient` | `dawn@dawnofthephoenix.com` |
 | `PaymentEmail__Password` | A Private Email mailbox application password, or the mailbox password if application passwords are unavailable; not your Namecheap account password |
 | `PaymentEmail__WebhookSecret` | Stripe endpoint signing secret (`whsec_...`) |
 | `PaymentEmail__QueueDirectory` | `/home/data/payment-emails` on Linux App Service; use an absolute persistent path under `%HOME%` on Windows, expanded to its actual value |

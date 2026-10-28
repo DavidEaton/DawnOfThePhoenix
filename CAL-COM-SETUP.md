@@ -23,7 +23,7 @@ Environment variable names below use `__`; user secrets use `:` instead.
 | `CalCom__WebhookSecret` | Random secret matching the Cal.com webhook secret |
 | `PaymentEmail__Enabled` | `true` |
 | `PaymentEmail__Host`, `PaymentEmail__Port` | `mail.privateemail.com`, `587` (STARTTLS) |
-| `PaymentEmail__Username`, `PaymentEmail__Recipient` | `dawdawn@dawnofthephoenix.com` |
+| `PaymentEmail__Username`, `PaymentEmail__Recipient` | `dawn@dawnofthephoenix.com` |
 | `PaymentEmail__Password` | Secret mailbox application password, not the Namecheap account password |
 | `BookingAlerts__TwilioAccountSid` | Twilio account SID |
 | `BookingAlerts__TwilioAuthToken` | Secret Twilio auth token |
