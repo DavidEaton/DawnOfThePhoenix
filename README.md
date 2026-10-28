@@ -109,8 +109,8 @@ All paths below are relative to `DawnOfThePhoenix.Web/`.
 
 | What you want to edit | Where to look |
 | --- | --- |
-| Home-page section order | `Pages/Index.cshtml` |
-| Hero, readings, Dawn’s introduction, gifts, FAQs, and other section content | Named partials in `Pages/Home/` |
+| Home-page content and section order | `Pages/Index.cshtml` (currently inlined except the tip jar) |
+| Companion section markup | Named partials in `Pages/Home/`; most are not currently rendered by `Index.cshtml` |
 | Header, footer, and dialog shell | `Pages/Shared/_Header.cshtml`, `_Footer.cshtml`, `_Dialog.cshtml` |
 | Shared metadata, CSS/script loading, and antiforgery token | `Pages/Shared/_Layout.cshtml` |
 | Reading terms and privacy page | `Pages/Terms.cshtml`, `Pages/Privacy.cshtml` |
@@ -133,7 +133,7 @@ All paths below are relative to `DawnOfThePhoenix.Web/`.
 
 The tab icon source is `wwwroot/assets/favicon.svg`. The root `wwwroot/favicon.ico` supplies the same artwork to bookmark managers and browsers requesting `/favicon.ico` directly. Keep both in sync when changing the icon; the ICO contains 16, 32, 48, and 64-pixel frames. The layout versions both icon links for cache refresh. Existing bookmarks may retain their cached icon until the page is revisited or the bookmark is recreated after deployment.
 
-For a content change, edit the relevant partial. For a styling change, edit the matching section in `site.css`. For booking behavior, start in `booking.js`; for payment transport, start in `checkout.js`. The repository’s `.editorconfig` sets four-space indentation and consistent line endings. Formatting and organization do not introduce a Node.js build step.
+For a home-page content change, edit the rendered markup in `Pages/Index.cshtml` and keep its companion partial consistent; the tip jar renders its partial directly. For a styling change, edit the matching section in `site.css`. For booking behavior, start in `booking.js`; for payment transport, start in `checkout.js`. The repository’s `.editorconfig` sets four-space indentation and consistent line endings. Formatting and organization do not introduce a Node.js build step.
 
 The superseded Node/Worker application has been removed. Supplied files were reference material; the user's current copy and prices govern the site. No invented testimonials or follower counts are included.
 
@@ -145,3 +145,7 @@ dotnet run --project tests/DawnOfThePhoenix.Checks
 ```
 
 The dependency-free C# checks mock Stripe's HTTP responses; they make no charges. They cover request/amount validation, the fixed $30 price, required question fields, tip bounds, error redaction, safe redirects, payment status, and secret-free public configuration. Local HTTP smoke checks also verified Razor rendering, assets, routes, and antiforgery rejection. Live Stripe/Cal.com transactions still require the accounts to be configured; visual browser QA remains unverified in this environment.
+
+## Conversion-flow review
+
+See [the visual research report and prioritized upgrades](docs/research/conversion-flow-review.md) for public Mobbin findings, direct medium-site comparisons, source links, access limits, and the audit against `8d2bf4c`. Written-reading instructions explain both Stripe and email paths and consistently start the 48-hour response window after payment.
