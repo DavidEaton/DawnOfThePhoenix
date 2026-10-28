@@ -149,5 +149,6 @@ status="$(curl --silent --show-error --max-time 10 -o "$scratch_dir/webhook" \
     -d '{"triggerEvent":"BOOKING_PAID"}' "$base_url/api/cal/webhook")"
 [[ "$status" == 401 ]]
 [[ ! -d "$scratch_dir/alert-state" ]]
-assert_response /js/booking.js text/javascript "frame.allow = 'payment'"
+assert_response /js/booking.js text/javascript "mountCalendar"
+assert_response /js/cal-embed.js text/javascript "https://app.cal.com/embed/embed.js"
 echo 'PASS: published pages, assets, private configuration, checkout antiforgery, and webhook authentication.'

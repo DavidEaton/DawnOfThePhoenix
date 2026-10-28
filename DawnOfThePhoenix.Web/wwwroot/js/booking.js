@@ -1,5 +1,6 @@
 import { bookingUrl, emailLink } from './configuration.js';
 import { showDialog } from './dialog.js';
+import { mountCalendar } from './cal-embed.js';
 
 export function initializeBooking() {
     document.querySelectorAll('[data-book]').forEach((button) => {
@@ -34,7 +35,7 @@ function showCalendar(link) {
     showDialog(`
         <p class="eyebrow">YOUR MOMENT STARTS HERE</p>
         <h2>Book time with Dawn.</h2>
-        <p>Choose a time in your time zone, enter your details, and pay securely to book your session.</p>
+        <p id="calendar-status" role="status">Loading Dawn’s calendar…</p>
         <div id="calendar"></div>
         <p class="modal-note">
             If the calendar doesn’t load,
@@ -44,14 +45,8 @@ function showCalendar(link) {
         </p>
     `);
 
-    const frame = document.createElement('iframe');
-    frame.title = 'Schedule a session with Dawn';
-    const embeddedUrl = new URL(link);
-    embeddedUrl.searchParams.set('embed', 'true');
-    frame.src = embeddedUrl.href;
-    frame.allow = 'payment';
-    document.querySelector('#calendar').append(frame);
     document.querySelector('#external-calendar').href = link;
+    mountCalendar(link, document.querySelector('#calendar'), document.querySelector('#calendar-status'));
 }
 
 function showEmailBooking(kind) {

@@ -29,7 +29,7 @@ Create Dawn's account at https://cal.com/signup, connect her calendar, and set t
 - **30-minute reading:** $30 USD, suggested slug `30-minute-reading`.
 - **60-minute reading:** $55 USD, suggested slug `60-minute-reading`.
 
-Connect Stripe within Cal.com and require payment on each event. Verify Cal.com's current plan supports your chosen payment features. Live session availability, bookings, timezones, and payments are handled by Cal.com. The site embeds those event pages with an external-page fallback; no Cal.com API key is needed.
+Connect Stripe within Cal.com and require payment on each event. Verify Cal.com's current plan supports your chosen payment features. Live session availability, bookings, timezones, and payments are handled by Cal.com. The existing booking buttons open the official scheduler inside the site’s dialog, using a dark theme and copper brand color, with an external-page fallback; no Cal.com API key is needed.
 
 Set the real username and event slugs in `DawnOfThePhoenix.Web/appsettings.json`, or use development user secrets:
 
