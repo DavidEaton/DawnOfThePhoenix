@@ -22,8 +22,10 @@ trap cleanup EXIT
         Stripe__SecretKey="${SMOKE_STRIPE_SECRET-smoke-test-secret-never-used}" \
         CalCom__Username=smoke-dawn CalCom__ThirtyMinuteEvent=30-minute-reading \
         CalCom__SixtyMinuteEvent=60-minute-reading CalCom__ThirtyMinuteEventId=30 CalCom__SixtyMinuteEventId=60 \
-        CalCom__WebhookSecret=smoke-cal-secret BookingAlerts__EmailTo=dawn@example.com \
-        BookingAlerts__EmailFrom=bookings@example.com BookingAlerts__SendGridApiKey=smoke-sendgrid-secret \
+        CalCom__WebhookSecret=smoke-cal-secret PaymentEmail__Enabled=true \
+        PaymentEmail__Username=bookings@example.com PaymentEmail__Recipient=dawn@example.com \
+        PaymentEmail__Password=smoke-smtp-secret PaymentEmail__WebhookSecret=whsec_smoke-secret \
+        PaymentEmail__QueueDirectory="$scratch_dir/payment-emails" \
         BookingAlerts__TwilioAccountSid=smoke-sid BookingAlerts__TwilioAuthToken=smoke-twilio-secret \
         BookingAlerts__SmsFrom=+15005550006 BookingAlerts__SmsTo=+15005550007 \
         BookingAlerts__StateDirectory="$scratch_dir/alert-state" \
@@ -130,7 +132,7 @@ assert_response /assets/favicon.svg image/svg+xml '<svg'
 assert_response /config.js application/javascript 'window.PHOENIX_CONFIG'
 grep -Fq 'https://cal.com/smoke-dawn/30-minute-reading' "$scratch_dir/body"
 grep -Fq 'https://cal.com/smoke-dawn/60-minute-reading' "$scratch_dir/body"
-if grep -Eq 'smoke-test-secret-never-used|smoke-cal-secret|smoke-sendgrid-secret|smoke-twilio-secret|15005550007' "$scratch_dir/body"; then
+if grep -Eq 'smoke-test-secret-never-used|smoke-cal-secret|smoke-smtp-secret|whsec_smoke-secret|smoke-twilio-secret|15005550007' "$scratch_dir/body"; then
     echo 'FAIL: public configuration exposed a server secret.' >&2
     exit 1
 fi
@@ -149,6 +151,11 @@ status="$(curl --silent --show-error --max-time 10 -o "$scratch_dir/webhook" \
     -d '{"triggerEvent":"BOOKING_PAID"}' "$base_url/api/cal/webhook")"
 [[ "$status" == 401 ]]
 [[ ! -d "$scratch_dir/alert-state" ]]
+status="$(curl --silent --show-error --max-time 10 -o "$scratch_dir/stripe-webhook" \
+    -w '%{http_code}' -H 'Content-Type: application/json' \
+    -d '{"type":"checkout.session.completed"}' "$base_url/api/stripe/webhook")"
+[[ "$status" == 400 ]]
+[[ -z "$(find "$scratch_dir/payment-emails" -name '*.json' -print -quit)" ]]
 assert_response /js/booking.js text/javascript "mountCalendar"
 assert_response /js/cal-embed.js text/javascript "https://app.cal.com/embed/embed.js"
 echo 'PASS: published pages, assets, private configuration, checkout antiforgery, and webhook authentication.'

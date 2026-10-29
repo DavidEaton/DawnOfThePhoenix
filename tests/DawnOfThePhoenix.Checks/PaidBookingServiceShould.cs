@@ -19,12 +19,12 @@ internal static class PaidBookingServiceShould
         var cal = new CalComOptions { Username = "dawn", WebhookSecret = "fixture-webhook-secret", ThirtyMinuteEventId = 30, SixtyMinuteEventId = 60 };
         var alerts = new BookingAlertOptions
         {
-            EmailTo = "dawn@example.com", EmailFrom = "bookings@example.com", SendGridApiKey = "fixture-sendgrid",
             TwilioAccountSid = "fixture-sid", TwilioAuthToken = "fixture-token", SmsFrom = "+15005550006",
             SmsTo = "+15005550007", StateDirectory = directory
         };
         var handler = new AlertHandler();
-        PaidBookingService Service() => new(new HttpClient(handler), Options.Create(cal), Options.Create(alerts));
+        var emailSettings = Options.Create(new PaymentEmailOptions { Enabled = true, Password = "fixture-smtp-password" });
+        PaidBookingService Service() => new(new HttpClient(handler), Options.Create(cal), Options.Create(alerts), new BookingEmailSender(handler), emailSettings);
         var service = Service();
         static void Check(bool condition, string name) { if (!condition) throw new Exception(name); }
         byte[] Body(string uid = "booking-1", string trigger = "BOOKING_PAID", int eventId = 30, string organizer = "dawn") =>
@@ -70,9 +70,9 @@ internal static class PaidBookingServiceShould
                 Check(await Post(unrelated, Sign(unrelated)) == 204, "CalWebhookShould.Ignore_On_Post_WhenBookingIsUnrelated");
             Check(handler.Requests.Count == 0 && !Directory.Exists(directory), "CalWebhookShould.PreserveState_On_Post_WhenRejectedOrIgnored");
             Check(await Post(body, Sign(body)) == 204 && handler.Requests.Count == 2, "CalWebhookShould.NotifyBothChannels_On_Post_WhenBookingPaid");
-            Check(handler.Requests[0].Url == "https://api.sendgrid.com/v3/mail/send"
-                && handler.Requests[0].Authorization == "Bearer fixture-sendgrid"
-                && handler.Requests[0].Body.Contains("dawn@example.com"), "PaidBookingServiceShould.SendToConfiguredEmail_On_HandleAsync");
+            Check(handler.Requests[0].Url == "smtp"
+                && handler.Requests[0].Body.Contains("Paid session booked")
+                && handler.Requests[0].Body.Contains("Test Client"), "PaidBookingServiceShould.SendToConfiguredEmail_On_HandleAsync");
             var sms = handler.Requests[1];
             Check(sms.Url.Contains("/Accounts/fixture-sid/Messages.json") && sms.Authorization.StartsWith("Basic ")
                 && sms.Body.Contains("To=%2B15005550007") && sms.Body.Contains("15%3A00+UTC"), "PaidBookingServiceShould.SendToConfiguredPhoneWithUtcTime_On_HandleAsync");
@@ -92,7 +92,7 @@ internal static class PaidBookingServiceShould
                 "PaidBookingServiceShould.AttemptSms_On_HandleAsync_WhenEmailFails");
             handler.FailEmail = false;
             Check(await Post(emailRetry, Sign(emailRetry), target: Service()) == 204 && handler.Requests.Count == 8
-                && handler.Requests[^1].Url.Contains("sendgrid.com"), "PaidBookingServiceShould.RetryOnlyEmail_On_HandleAsync_WhenSmsAlreadyAccepted");
+                && handler.Requests[^1].Url == "smtp", "PaidBookingServiceShould.RetryOnlyEmail_On_HandleAsync_WhenSmsAlreadyAccepted");
             var locked = Body("locked");
             var key = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("locked")));
             using (var gate = new FileStream(Path.Combine(directory, key + ".lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
@@ -105,6 +105,16 @@ internal static class PaidBookingServiceShould
         }
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true); }
         Console.WriteLine("PASS: signed paid-booking webhooks, scoped events, two-channel alerts, durable deduplication, partial retries, and bounded requests.");
+    }
+
+    private sealed class BookingEmailSender(AlertHandler handler) : IPaymentEmailSender
+    {
+        public Task SendAsync(PaymentEmail email, CancellationToken cancellationToken)
+        {
+            handler.Requests.Add(("smtp", "", email.Subject + " " + email.Body));
+            if (handler.FailEmail) throw new System.Net.Mail.SmtpException("Fixture failure");
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class AlertHandler : HttpMessageHandler

@@ -68,7 +68,7 @@ Double underscores map to nested ASP.NET configuration. Do not commit the Stripe
 
 The website can render without payment/booking credentials, using its existing unavailable/email fallback behavior. Configure and verify those accounts before accepting customers. Cal.com handles live-session bookings; the server-side Stripe key handles written readings and tips. They are separate setups. Configure Stripe Checkout terms consent using this site's `/terms` URL.
 
-For paid-session email and SMS alerts, also configure all values and the Cal.com webhook in [CAL-COM-SETUP.md](CAL-COM-SETUP.md). Use `/home/data/phoenix-booking-alerts` for `BookingAlerts__StateDirectory` on Linux App Service, outside the ZIP deployment, and keep the app at one instance until a shared transactional delivery journal is implemented. Verify both SendGrid and Twilio delivery logs and preserve the journal across deployments/rollback.
+For paid-session email and SMS alerts, also configure all values and the Cal.com webhook in [CAL-COM-SETUP.md](CAL-COM-SETUP.md). Use `/home/data/phoenix-booking-alerts` for `BookingAlerts__StateDirectory` on Linux App Service, outside the ZIP deployment, and keep the app at one instance until a shared transactional delivery journal is implemented. Verify Namecheap SMTP acceptance/inbox delivery and Twilio delivery logs and preserve the journal across deployments/rollback.
 
 When adding a custom domain later, bind it and its HTTPS certificate in Azure, change `Site__PublicBaseUrl` to that canonical HTTPS origin, and add the domain to `AllowedHosts` (semicolon-separated when keeping multiple hostnames).
 
@@ -114,3 +114,30 @@ Each build retains a `webapp` artifact with `webapp.zip`. To roll back code, rer
 Run `bash tests/deployment/smoke-publish.sh /absolute/path/to/publish` after `dotnet publish` to verify the deployment output locally. See `tests/deployment/README.md` for prerequisites and coverage.
 
 The pipeline has been prepared locally. Azure resource settings, service connections, repository publishing, and an actual deployment must still be completed in your accounts.
+
+## Payment notification emails through Namecheap Private Email
+
+The app can notify Dawn about paid written readings and card tips through the existing `dawn@dawnofthephoenix.com` mailbox. No SendGrid/Plunk account or separate email subscription is needed. Existing Namecheap mailbox charges and sending limits still apply. This address is used only for notification sending/receiving; the public site contact address is unchanged.
+
+Add these **App Service environment variables** (never commit passwords):
+
+| Name | Value |
+| --- | --- |
+| `PaymentEmail__Enabled` | `true` |
+| `PaymentEmail__Host` | `mail.privateemail.com` |
+| `PaymentEmail__Port` | `587` |
+| `PaymentEmail__Username` | `dawn@dawnofthephoenix.com` |
+| `PaymentEmail__Recipient` | `dawn@dawnofthephoenix.com` |
+| `PaymentEmail__Password` | A Private Email mailbox application password, or the mailbox password if application passwords are unavailable; not your Namecheap account password |
+| `PaymentEmail__WebhookSecret` | Stripe endpoint signing secret (`whsec_...`) |
+| `PaymentEmail__QueueDirectory` | `/home/data/payment-emails` on Linux App Service; use an absolute persistent path under `%HOME%` on Windows, expanded to its actual value |
+
+SMTP always requires STARTTLS, certificate validation, and authentication on port 587. Namecheap's configuration reference: https://www.namecheap.com/support/knowledgebase/article.aspx/1179/2175/general-private-email-configuration-for-mail-clients-and-mobile-devices/
+
+In Stripe's webhook/event-destination settings, add your canonical HTTPS origin plus `/api/stripe/webhook`, subscribing to `checkout.session.completed` and `checkout.session.async_payment_succeeded`. Copy that endpoint's signing secret into the setting above. Test and live endpoints have separate secrets; use the matching mode and Stripe account. A paid Checkout session must contain this app's `service=questions` or `service=tip` metadata. Unpaid, unrelated, and unsigned events do not trigger email. Notifications do not depend on the customer returning to the website.
+
+The webhook acknowledges only after persisting a notification. A background worker checks the queue every minute, retaining failed messages for retry and recording successful Checkout session IDs to suppress repeated webhook deliveries. Customer details and reading questions appear in plain-text notification emails; they are removed from queue storage after SMTP acceptance, leaving an empty deduplication marker. Restrict access to and back up persistent storage. Do not put the queue under the deployed code or `wwwroot`. Keep App Service storage persistent and enable Always On for timely retries. Use one App Service instance, consistent with the Cal.com journal. Before scaling out or sharing slots, replace filesystem state with a shared transactional outbox. Do not prune `.sent` markers unless you accept replayed notifications.
+
+Delivery is at least once: a crash or SMTP timeout after the server accepts an email can cause a duplicate on retry. SMTP acceptance does not guarantee inbox placement. Monitor App Service logs for delivery failures and pending `.json` files; a failed notification does not reverse or block a payment. Secrets and customer content are omitted from application error logs. The webhook returns 503 when email configuration or storage is unavailable so Stripe can retry within its retry window.
+
+Before accepting live orders, complete a test-mode written reading and tip, confirm the email contents and sender/recipient, resend the same Stripe event to verify deduplication, and check that a failed SMTP attempt remains queued and succeeds after fixing configuration. Verify mailbox SPF/DKIM and spam-folder placement. Keep Stripe's merchant notifications enabled as a fallback until this is verified. Direct PayPal/Cash App tips are not covered. Cal.com bookings use the separate signed webhook described in CAL-COM-SETUP.md, with the same SMTP mailbox.
