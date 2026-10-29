@@ -2,7 +2,6 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using DawnOfThePhoenix.Web.Options;
-using DawnOfThePhoenix.Web.Pages;
 using DawnOfThePhoenix.Web.Pages.Api;
 using DawnOfThePhoenix.Web.Services;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +11,7 @@ using Microsoft.Extensions.Options;
 
 await PaidBookingServiceShould.RunAsync();
 await PaymentWebhookShould.RunAsync();
+ConfigurationModelShould.Run();
 
 var handler = new FakeStripeHandler();
 var client = new HttpClient(handler) { BaseAddress = new Uri("https://api.stripe.com/v1/") };
@@ -66,11 +66,6 @@ Check(Status(await statusPage.OnGetAsync("bad", default)) == 400, "Invalid sessi
 var payment = (JsonResult)await statusPage.OnGetAsync("cs_test_12345678901", default);
 var safePayment = JsonSerializer.Serialize(payment.Value);
 Check(safePayment.Contains("\"paid\":true") && !safePayment.Contains("private@example.com"), "Payment verification must not return customer details.");
-var configPage = new ConfigurationModel(Options.Create(new CalComOptions { Username = "dawn", ThirtyMinuteEvent = "30-minute-reading", WebhookSecret = "private-cal-secret", ThirtyMinuteEventId = 30, SixtyMinuteEventId = 60 }), Options.Create(new StripeOptions { SecretKey = "test-fixture-only" }), site);
-var config = configPage.OnGet().Content!;
-Check(config.Contains("https://cal.com/dawn/30-minute-reading") && !config.Contains("test-fixture-only") && !config.Contains("private-cal-secret"), "Public configuration must expose booking paths and omit secrets.");
-var badConfig = new ConfigurationModel(Options.Create(new CalComOptions { Username = "../bad" }), Options.Create(new StripeOptions()), site).OnGet().Content!;
-Check(!badConfig.Contains("../bad"), "Cal.com identifiers must be validated.");
 Console.WriteLine("PASS: C# checkout validation, fixed pricing, question fields, tips, error redaction, Stripe verification, safe redirects, and private configuration.");
 
 sealed class FakeStripeHandler : HttpMessageHandler

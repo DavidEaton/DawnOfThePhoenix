@@ -10,6 +10,9 @@ public sealed class CalComOptions
     public string Username { get; set; } = "";
     public string ThirtyMinuteEvent { get; set; } = "";
     public string SixtyMinuteEvent { get; set; } = "";
+    // Operator attestation after testing required payment in the matching Cal.com event.
+    public bool ThirtyMinutePaymentVerified { get; set; }
+    public bool SixtyMinutePaymentVerified { get; set; }
 }
 
 public sealed class StripeOptions

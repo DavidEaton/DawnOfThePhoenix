@@ -62,11 +62,13 @@ Open **App Service → Settings → Environment variables → App settings** (ol
 | `CalCom__Username` | Dawn's actual Cal.com username |
 | `CalCom__ThirtyMinuteEvent` | Actual 30-minute event slug |
 | `CalCom__SixtyMinuteEvent` | Actual 60-minute event slug |
+| `CalCom__ThirtyMinutePaymentVerified` | `false` until required payment is verified for the 30-minute event; then `true` |
+| `CalCom__SixtyMinutePaymentVerified` | `false` until required payment is verified for the 60-minute event; then `true` |
 | `Stripe__SecretKey` | Stripe **test-mode** secret key for initial verification |
 
 Double underscores map to nested ASP.NET configuration. Do not commit the Stripe key or put it in YAML. User secrets from your development computer do not deploy. App Service settings remain in Azure across code deployments. A Key Vault reference is an option for managing the Stripe secret centrally.
 
-The website can render without payment/booking credentials, using its existing unavailable/email fallback behavior. Configure and verify those accounts before accepting customers. Cal.com handles live-session bookings; the server-side Stripe key handles written readings and tips. They are separate setups. Configure Stripe Checkout terms consent using this site's `/terms` URL.
+The website can render without payment/booking credentials, using its existing unavailable/email fallback behavior. Calendar links are withheld for each session until its payment-verification flag is explicitly enabled. Follow [Payment before confirmation](CAL-COM-SETUP.md#payment-before-confirmation) before enabling either flag, including on an existing deployment: configured event slugs alone no longer activate online scheduling. These flags attest to manual verification; they do not modify Cal.com or protect its direct URLs. Reset the affected flag and reverify after changing account/event/payment settings. Cal.com handles live-session bookings; the server-side Stripe key handles written readings and tips. They are separate setups. Configure Stripe Checkout terms consent using this site's `/terms` URL.
 
 For paid-session email and SMS alerts, also configure all values and the Cal.com webhook in [CAL-COM-SETUP.md](CAL-COM-SETUP.md). Use `/home/data/phoenix-booking-alerts` for `BookingAlerts__StateDirectory` on Linux App Service, outside the ZIP deployment, and keep the app at one instance until a shared transactional delivery journal is implemented. Verify Namecheap SMTP acceptance/inbox delivery and Twilio delivery logs and preserve the journal across deployments/rollback.
 

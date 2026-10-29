@@ -39,6 +39,8 @@ dotnet user-secrets set "CalCom:ThirtyMinuteEvent" "30-minute-reading" --project
 dotnet user-secrets set "CalCom:SixtyMinuteEvent" "60-minute-reading" --project DawnOfThePhoenix.Web
 ```
 
+Booking links stay disabled by default until each event's required payment has been tested. Follow [Payment before confirmation](CAL-COM-SETUP.md#payment-before-confirmation), then set `CalCom:ThirtyMinutePaymentVerified` and/or `CalCom:SixtyMinutePaymentVerified` to `true` for the verified event. Unverified sessions offer email contact without a calendar or direct booking link. These flags record an operator's verification; Cal.com enforces payment. Reset the affected flag and reverify after account/event/payment changes. The website's Stripe key activates written readings and card tips independently.
+
 ## Connect Stripe
 
 Create and activate Dawn's account at https://dashboard.stripe.com/register. Dawn must complete business and payout verification herself. Start with a **test-mode secret key** and save it locally with user secrets:
@@ -96,6 +98,8 @@ Configure these values using the host's configuration/secret settings. Environme
 | `CalCom:Username` | `CalCom__Username` | Actual username |
 | `CalCom:ThirtyMinuteEvent` | `CalCom__ThirtyMinuteEvent` | Actual 30-minute event slug |
 | `CalCom:SixtyMinuteEvent` | `CalCom__SixtyMinuteEvent` | Actual 60-minute event slug |
+| `CalCom:ThirtyMinutePaymentVerified` | `CalCom__ThirtyMinutePaymentVerified` | Default `false`; `true` only after required-payment verification for the 30-minute event |
+| `CalCom:SixtyMinutePaymentVerified` | `CalCom__SixtyMinutePaymentVerified` | Default `false`; `true` only after required-payment verification for the 60-minute event |
 | `Stripe:SecretKey` | `Stripe__SecretKey` | Live secret, stored securely |
 | `Site:PublicBaseUrl` | `Site__PublicBaseUrl` | Canonical HTTPS origin, e.g. `https://your-domain.com` |
 | `Site:Email` | `Site__Email` | Dawn's contact email |

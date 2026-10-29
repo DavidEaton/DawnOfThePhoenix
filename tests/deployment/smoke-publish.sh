@@ -22,6 +22,7 @@ trap cleanup EXIT
         Stripe__SecretKey="${SMOKE_STRIPE_SECRET-smoke-test-secret-never-used}" \
         CalCom__Username=smoke-dawn CalCom__ThirtyMinuteEvent=30-minute-reading \
         CalCom__SixtyMinuteEvent=60-minute-reading CalCom__ThirtyMinuteEventId=30 CalCom__SixtyMinuteEventId=60 \
+        CalCom__ThirtyMinutePaymentVerified=true CalCom__SixtyMinutePaymentVerified=false \
         CalCom__WebhookSecret=smoke-cal-secret PaymentEmail__Enabled=true \
         PaymentEmail__Username=bookings@example.com PaymentEmail__Recipient=dawn@example.com \
         PaymentEmail__Password=smoke-smtp-secret PaymentEmail__WebhookSecret=whsec_smoke-secret \
@@ -131,7 +132,12 @@ assert_response /js/site.js text/javascript import
 assert_response /assets/favicon.svg image/svg+xml '<svg'
 assert_response /config.js application/javascript 'window.PHOENIX_CONFIG'
 grep -Fq 'https://cal.com/smoke-dawn/30-minute-reading' "$scratch_dir/body"
-grep -Fq 'https://cal.com/smoke-dawn/60-minute-reading' "$scratch_dir/body"
+grep -Fq '"sixtyMinuteUrl":""' "$scratch_dir/body"
+grep -Fq '"bookingUrl":""' "$scratch_dir/body"
+if grep -Fq 'https://cal.com/smoke-dawn/60-minute-reading' "$scratch_dir/body"; then
+    echo 'FAIL: an unverified event was exposed in public configuration.' >&2
+    exit 1
+fi
 if grep -Eq 'smoke-test-secret-never-used|smoke-cal-secret|smoke-smtp-secret|whsec_smoke-secret|smoke-twilio-secret|15005550007' "$scratch_dir/body"; then
     echo 'FAIL: public configuration exposed a server secret.' >&2
     exit 1

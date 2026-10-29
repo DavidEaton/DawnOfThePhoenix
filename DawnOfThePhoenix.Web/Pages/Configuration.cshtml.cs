@@ -22,9 +22,10 @@ public sealed partial class ConfigurationModel(
         var hour = SafeSlug(cal.SixtyMinuteEvent);
         var config = new
         {
-            bookingUrl = root,
-            thirtyMinuteUrl = root.Length > 0 && thirty.Length > 0 ? $"{root}/{thirty}" : "",
-            sixtyMinuteUrl = root.Length > 0 && hour.Length > 0 ? $"{root}/{hour}" : "",
+            // Never offer the profile as a fallback: it may list unpaid event types.
+            bookingUrl = "",
+            thirtyMinuteUrl = cal.ThirtyMinutePaymentVerified && root.Length > 0 && thirty.Length > 0 ? $"{root}/{thirty}" : "",
+            sixtyMinuteUrl = cal.SixtyMinutePaymentVerified && root.Length > 0 && hour.Length > 0 ? $"{root}/{hour}" : "",
             paymentsReady = !string.IsNullOrWhiteSpace(stripeOptions.Value.SecretKey),
             email = siteOptions.Value.Email
         };
