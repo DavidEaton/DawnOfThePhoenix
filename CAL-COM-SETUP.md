@@ -11,6 +11,19 @@ The Razor Pages app uses **Pop up via element click**: existing booking buttons 
 5. Configure the values below in ASP.NET user secrets for development or App Service environment variables for production. Keep credentials out of Git and chat. No Cal.com API key is required.
 6. In Cal.com **Settings → Developer → Webhooks**, create an enabled webhook pointing to `https://YOUR-SITE/api/cal/webhook`. Select **Booking Paid** (`BOOKING_PAID`) only, and set its signing secret to the same random secret stored as `CalCom:WebhookSecret`. Use Cal.com’s default JSON payload, without a custom template. The receiver follows the documented `2021-10-20` payload fields; those fields remain supported in the `2026-07-27` version. Do not substitute a booking-created or payment-initiated trigger for a successful payment.
 
+## Payment before confirmation
+
+Selecting a time, entering contact details, paying, then receiving a confirmed appointment is a common flow for paid consultations. Use Cal.com's native required-payment flow so the payment and selected appointment remain connected. Do not add a separate website payment button that can charge without reserving the selected time. Cal.com may hold a time or create a pending record during checkout; verify that it does not become a confirmed appointment without successful payment.
+
+If the scheduler says **This meeting is scheduled** without a payment step, treat that event as unverified. Website copy, iframe payment permission, the website's `Stripe__SecretKey`, and paid-booking notification webhooks cannot make a free Cal.com event require payment.
+
+1. Leave `CalCom__ThirtyMinutePaymentVerified` and `CalCom__SixtyMinutePaymentVerified` set to `false` in the deployed app while fixing the account. Both default to `false`. The site offers email contact and withholds the affected calendar and direct booking link. Verification is independent for each session; there is no generic profile fallback.
+2. In Dawn's Cal.com account, connect/authorize Stripe in the app store/integrations area. Open **each actual event type** (`30min` and `60-min-meeting`), find its payment/Stripe settings (often under **Apps**), enable required payment at booking, set **30 USD** or **55 USD** respectively, and save. Menu names and payment availability depend on Cal.com's current plan/UI. If the payment option is unavailable, resolve the account/plan setup before activating bookings.
+3. Test the saved direct event page in a private browser. Verify that payment is required, the duration/amount/currency are correct, abandoning or failing payment does not confirm the meeting, and successful payment produces the intended calendar invitation/customer confirmation. Investigate previously created unpaid appointments in Cal.com separately; this code does not collect their balances or cancel them.
+4. After the direct-page checks pass, enable the corresponding `CalCom__ThirtyMinutePaymentVerified=true` or `CalCom__SixtyMinutePaymentVerified=true` in a development/staging app and repeat the full test through its dialog and external-page fallback on desktop/mobile. Use the provider-supported test setup; avoid unintended live charges. Enable the corresponding production flag only after the checks pass for the intended account/event setup.
+
+These flags are an **operator attestation**, not a live API check or a payment receipt. This application has no authenticated Cal.com management integration and cannot change or inspect the event's payment requirement. The flags only control which links this website exposes; Cal.com must enforce payment on its own direct URLs. Reset the affected flag to `false` whenever changing a username, event slug, Stripe connection, price, or payment requirement, then reverify. Unpublish/disable any free event in Cal.com if its existing direct link must stop accepting bookings.
+
 ## Configuration
 
 Environment variable names below use `__`; user secrets use `:` instead.
@@ -19,6 +32,7 @@ Environment variable names below use `__`; user secrets use `:` instead.
 | --- | --- |
 | `CalCom__Username` | Dawn’s actual username |
 | `CalCom__ThirtyMinuteEvent`, `CalCom__SixtyMinuteEvent` | Real paid-event slugs |
+| `CalCom__ThirtyMinutePaymentVerified`, `CalCom__SixtyMinutePaymentVerified` | Default `false`; set each to `true` only after verifying required payment and successful/failed/abandoned booking behavior for that event |
 | `CalCom__ThirtyMinuteEventId`, `CalCom__SixtyMinuteEventId` | Positive numeric IDs for those events |
 | `CalCom__WebhookSecret` | Random secret matching the Cal.com webhook secret |
 | `PaymentEmail__Enabled` | `true` |
@@ -46,7 +60,7 @@ Monitor failed Cal.com deliveries and the application’s generic paid-alert war
 ## Before enabling customer bookings
 
 - Complete a test payment for **each** duration through the site dialog. Confirm Cal.com’s exact price/currency, time zone, Stripe payment, calendar entry, customer confirmation, and Dawn’s email and SMS. Test on mobile as well as desktop, including the external-page fallback. Use a test account/event setup, not unintended live charges.
-- Abandon or fail payment and confirm no paid-session alert. Reschedule/cancel and confirm the calendar behavior and absence of another paid alert.
+- Abandon or fail payment and confirm the meeting is not confirmed and no paid-session alert is sent. Reschedule/cancel and confirm the calendar behavior and absence of another paid alert.
 - Replay the same paid webhook and confirm no additional alerts. Temporarily fail one provider, confirm the other still receives its alert and the receiver returns `503`, restore it, and replay to confirm only the failed channel sends.
 - Restart/redeploy and replay to confirm state persists. Verify missing/invalid signatures cannot send alerts, and public configuration contains no secrets or phone number.
 - Switch to the intended live account/payment setup only after these checks. This repository does not provision Cal.com, Stripe, Namecheap Private Email, Twilio, or Azure accounts. Empty defaults do not activate live scheduling or alerts.

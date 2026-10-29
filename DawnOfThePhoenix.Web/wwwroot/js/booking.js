@@ -61,8 +61,8 @@ function showEmailBooking(kind) {
         <p class="eyebrow">LET’S CONNECT</p>
         <h2>${heading}</h2>
         <p>
-            Online scheduling is being set up. In the meantime, email Dawn to arrange
-            your session and payment. Your time is confirmed directly with Dawn.
+            Online scheduling and payment are being set up. In the meantime, email Dawn
+            to ask about availability and how to pay before your session is confirmed.
         </p>
         <div class="modal-options" id="booking-options"></div>
         <p class="modal-note">This email request does not reserve a time or collect payment.</p>

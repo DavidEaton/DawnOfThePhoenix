@@ -53,7 +53,7 @@ export async function mountCalendar(link, container, status) {
             theme: 'dark', layout: 'month_view', hideEventTypeDetails: false,
             cssVarsPerTheme: { dark: { 'cal-brand': '#e3a771' } },
         });
-        status.textContent = 'Choose a time in your time zone and complete payment to book.';
+        status.textContent = 'Choose a time in your time zone, enter your details, then pay to confirm. If no payment step appears, contact Dawn before booking.';
     } catch {
         if (container.isConnected) status.textContent = 'The calendar could not load. Please open the booking page below.';
     }

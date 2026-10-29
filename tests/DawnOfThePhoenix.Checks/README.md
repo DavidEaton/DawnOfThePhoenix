@@ -10,6 +10,8 @@ The optional native-JavaScript booking-dialog checks run with `node tests/browse
 
 Use the SDK described in the [root README](../../README.md). For checks against the actual deployment package, see [published application checks](../deployment/README.md).
 
+Booking activation checks verify that configured slugs and the website's Stripe key cannot activate an unverified session, each verified event is exposed independently, invalid paths remain withheld, and public configuration omits secrets. These checks verify the site's activation safeguard; they do not prove Cal.com's account settings require payment. Complete the account tests in `CAL-COM-SETUP.md` before enabling each verification flag.
+
 ## Test conventions
 
 Use short, outcome-first names for new and changed tests; some older names vary:
